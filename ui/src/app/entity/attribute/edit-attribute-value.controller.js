@@ -14,36 +14,26 @@
  * limitations under the License.
  */
 /*@ngInject*/
-export default function EditAttributeValueController($scope, $q, $element, types, attributeValue, valueType, save) {
+export default function EditAttributeValueController($scope, $q, $element, types, attributeValue, save) {
 
     $scope.valueTypes = types.valueType;
 
     $scope.model = {};
 
     $scope.model.value = attributeValue;
-
-    switch (valueType) {
-        case "S":
-            $scope.valueType = types.valueType.string;
-            break;
-        case "L":
+    console.log("$scope.model.value Edit", $scope.model.value);    //eslint-disable-line
+    if ($scope.model.value === true || $scope.model.value === false) {
+        $scope.valueType = types.valueType.boolean;
+    } else if (angular.isNumber($scope.model.value)) {
+        if ($scope.model.value.toString().indexOf('.') == -1) {
             $scope.valueType = types.valueType.integer;
-            break;
-        case "D":
+        } else {
             $scope.valueType = types.valueType.double;
-            break;
-        case "B":
-            $scope.valueType = types.valueType.boolean;
-            break;
-        case "J":
-            $scope.valueType = types.valueType.json;
-            console.log('$scope.model.value do', $scope.model.value);   //eslint-disable-line
-            $scope.model.value = angular.toJson(attributeValue);
-            console.log('$scope.model.value after', $scope.model.value);    //eslint-disable-line
-            break;
-         default:
-             $scope.valueType = types.valueType.string;
-            break;
+        }
+    } else if (angular.isObject($scope.model.value)){
+        $scope.valueType = types.valueType.json;
+    }  else {
+        $scope.valueType = types.valueType.string;
     }
 
     $scope.submit = submit;
@@ -54,11 +44,18 @@ export default function EditAttributeValueController($scope, $q, $element, types
     }
 
     function update() {
+        console.log("$scope.model", $scope.model);  //eslint-disable-line
+        if ($scope.valueType===types.valueType.json) {
+            $scope.model.value = angular.fromJson($scope.model.value);
+            console.log("$scope.model json", $scope.model);  //eslint-disable-line
+        }
+
         if($scope.editDialog.$invalid) {
             return $q.reject();
         }
 
         if(angular.isFunction(save)) {
+
             return $q.when(save($scope.model));
         }
 

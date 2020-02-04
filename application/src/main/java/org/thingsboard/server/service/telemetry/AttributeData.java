@@ -20,14 +20,12 @@ public class AttributeData implements Comparable<AttributeData>{
     private final long lastUpdateTs;
     private final String key;
     private final Object value;
-    private final String valueType;
 
-    public AttributeData(long lastUpdateTs, String key, Object value, String valueType) {
+    public AttributeData(long lastUpdateTs, String key, Object value) {
         super();
         this.lastUpdateTs = lastUpdateTs;
         this.key = key;
         this.value = value;
-        this.valueType = valueType;
     }
 
     public long getLastUpdateTs() {
@@ -40,10 +38,6 @@ public class AttributeData implements Comparable<AttributeData>{
 
     public Object getValue() {
         return value;
-    }
-
-    public String getValueType() {
-        return valueType;
     }
 
     @Override

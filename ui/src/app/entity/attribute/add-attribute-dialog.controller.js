@@ -35,6 +35,7 @@ export default function AddAttributeDialogController($scope, $mdDialog, types, a
         $scope.theForm.$setPristine();
         if (vm.valueType===types.valueType.json) {
             vm.attribute.value = angular.fromJson(vm.attribute.value);
+            console.log("value json add", vm.attribute.value);    //eslint-disable-line
         }
         attributeService.saveEntityAttributes(entityType, entityId, attributeScope, [vm.attribute]).then(
             function success() {

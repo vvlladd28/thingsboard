@@ -16,20 +16,5 @@
 package org.thingsboard.server.common.data.kv;
 
 public enum DataType {
-
-    STRING("S"),
-    LONG("L"),
-    BOOLEAN("B"),
-    DOUBLE("D"),
-    JSON("J");
-
-    DataType(String shortType) {
-        this.shortType = shortType;
-    }
-
-    private String shortType;
-
-    public String getShortType() {
-        return shortType;
-    }
+    STRING, LONG, BOOLEAN, DOUBLE, JSON;
 }

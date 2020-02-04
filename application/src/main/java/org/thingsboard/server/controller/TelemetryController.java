@@ -536,7 +536,7 @@ public class TelemetryController extends BaseController {
             @Override
             public void onSuccess(List<AttributeKvEntry> attributes) {
                 List<AttributeData> values = attributes.stream().map(attribute -> new AttributeData(attribute.getLastUpdateTs(),
-                        attribute.getKey(), attribute.getValue(), attribute.getDataType().getShortType())).collect(Collectors.toList());
+                        attribute.getKey(), attribute.getValue())).collect(Collectors.toList());
                 logAttributesRead(user, entityId, scope, keyList, null);
                 response.setResult(new ResponseEntity<>(values, HttpStatus.OK));
             }
