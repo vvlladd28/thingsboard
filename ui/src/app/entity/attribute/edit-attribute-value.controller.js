@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /*@ngInject*/
-export default function EditAttributeValueController($scope, $q, $element, types, attributeValue, shortType, save) {
+export default function EditAttributeValueController($scope, $q, $element, types, attributeValue, valueType, save) {
 
     $scope.valueTypes = types.valueType;
 
@@ -22,7 +22,7 @@ export default function EditAttributeValueController($scope, $q, $element, types
 
     $scope.model.value = attributeValue;
 
-    switch (shortType) {
+    switch (valueType) {
         case "S":
             $scope.valueType = types.valueType.string;
             break;
