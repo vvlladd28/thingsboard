@@ -15,9 +15,15 @@
  */
 package org.thingsboard.server.common.data.kv;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.extern.slf4j.Slf4j;
+
+import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
 
+@Slf4j
 public class JsonDataEntry extends BasicKvEntry {
     private final String value;
 
@@ -47,7 +53,14 @@ public class JsonDataEntry extends BasicKvEntry {
 
     @Override
     public Object getValue() {
-        return value;
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode jsonNode = null;
+        try {
+            jsonNode = mapper.readValue(value, ObjectNode.class);
+        } catch (IOException e) {
+            log.error("Failed to fetch attributes", e);
+        }
+        return jsonNode;
     }
 
     @Override

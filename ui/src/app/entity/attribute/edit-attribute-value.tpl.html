@@ -61,17 +61,26 @@
                             <md-input-container flex
                                                 class="md-block">
                                 <label translate>value.json-value</label>
-                                <input required name="value" ng-model="model.value">
-                                <div ng-messages="theForm.value.$error">
+                                <input required name="valueJson" ng-model="model.viewJsonStr"
+                                       ng-disabled=true>
+                                <div ng-messages="theForm.valueJson.$error">
                                     <div translate ng-message="required">attribute.value-required</div>
                                 </div>
                             </md-input-container>
-                            <md-button id="edit-json" aria-label="{{'action.edit'|translate}}"
-                                       style="margin-top: 20px;"
-                                       class="md-icon-button "
-                                       ng-click="vm.cancel()">
-                                <ng-md-icon icon="edit" aria-label="Edit"></ng-md-icon>
+                            <md-button class="md-icon-button"
+                                       ng-click="dismiss()"
+                                       aria-label="{{ 'action.edit' | translate }}">
+                                <md-tooltip md-direction="top">
+                                    {{ 'action.edit' | translate }}
+                                </md-tooltip>
+                                <ng-md-icon size="20" icon="edit"></ng-md-icon>
                             </md-button>
+<!--                            <md-button id="edit-json" aria-label="{{'action.edit'|translate}}"-->
+<!--                                       style="margin-top: 20px;"-->
+<!--                                       class="md-icon-button "-->
+<!--                                       ng-click="vm.cancel()">-->
+<!--                                <ng-md-icon icon="edit" aria-label="Edit"></ng-md-icon>-->
+<!--                            </md-button>-->
                         </div>
                     </div>
 

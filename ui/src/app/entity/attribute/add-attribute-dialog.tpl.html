@@ -88,9 +88,13 @@
                                             <div translate ng-message="required">attribute.value-required</div>
                                         </div>
                                     </md-input-container>
-                                    <md-button id="edit-json" aria-label="{{'action.edit'|translate}}"
-                                               ng-click="vm.cancel()">
-                                        <ng-md-icon size="24" icon="edit"></ng-md-icon>
+                                    <md-button class="md-icon-button"
+                                               ng-click="vm.cancel()"
+                                               aria-label="{{ 'action.edit' | translate }}">
+                                        <md-tooltip md-direction="top">
+                                            {{ 'action.edit' | translate }}
+                                        </md-tooltip>
+                                        <ng-md-icon size="20" icon="edit"></ng-md-icon>
                                     </md-button>
                                 </div>
                             </div>

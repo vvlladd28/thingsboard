@@ -31,6 +31,8 @@ export default function EditAttributeValueController($scope, $q, $element, types
             $scope.valueType = types.valueType.double;
         }
     } else if (angular.isObject($scope.model.value)){
+        $scope.model.viewJsonStr = angular.toJson($scope.model.value);
+        console.log("$scope.model.value Json", $scope.model.valuejson);    //eslint-disable-line
         $scope.valueType = types.valueType.json;
     }  else {
         $scope.valueType = types.valueType.string;
