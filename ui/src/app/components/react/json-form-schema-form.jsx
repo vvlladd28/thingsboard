@@ -90,12 +90,11 @@ class ThingsboardSchemaForm extends React.Component {
         this.props.onToggleFullscreen();
     }
 
-    
+
     builder(form, model, index, onChange, onColorClick, onIconClick, onToggleFullscreen, mapper) {
         var type = form.type;
         let Field = this.mapper[type];
         if(!Field) {
-            console.log('Invalid field: \"' + form.key[0] + '\"!');
             return null;
         }
         if(form.condition) {
@@ -165,4 +164,4 @@ class ThingsboardSchemaGroup extends React.Component{
                     <div style={{padding: '20px'}} className={this.state.showGroup?"":"invisible"}>{this.props.forms}</div>
                 </section>);
     }
-} 
+}

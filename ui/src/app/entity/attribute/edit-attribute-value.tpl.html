@@ -56,6 +56,25 @@
                             {{ (model.value ? 'value.true' : 'value.false') | translate }}
                         </md-checkbox>
                     </div>
+                    <div layout="column" layout-align="center" flex>
+                        <div layout="row" ng-if="vm.valueType===vm.valueTypes.json">
+                            <md-input-container flex
+                                                class="md-block">
+                                <label translate>value.json-value</label>
+                                <input required name="value" ng-model="vm.attribute.value">
+                                <div ng-messages="theForm.value.$error">
+                                    <div translate ng-message="required">attribute.value-required</div>
+                                </div>
+                            </md-input-container>
+                            <md-button id="edit-json" aria-label="{{'action.edit'|translate}}"
+                                       style="margin-top: 20px;"
+                                       class="md-icon-button "
+                                       ng-click="vm.cancel()">
+                                <ng-md-icon icon="edit" aria-label="Edit"></ng-md-icon>
+                            </md-button>
+                        </div>
+                    </div>
+
                 </section>
             </fieldset>
         </div>

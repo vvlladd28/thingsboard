@@ -1497,7 +1497,9 @@
         "boolean-value": "Boolean value",
         "false": "False",
         "true": "True",
-        "long": "Long"
+        "long": "Long",
+        "json": "Json",
+        "json-value": "Json value"
     },
     "widget": {
         "widget-library": "Widgets Library",

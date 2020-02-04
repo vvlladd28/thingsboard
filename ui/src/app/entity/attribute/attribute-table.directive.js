@@ -202,6 +202,7 @@ export default function AttributeTableDirective($compile, $templateCache, $rootS
                     controller: EditAttributeValueController,
                     templateUrl: editAttributeValueTemplate,
                     locals: {attributeValue: attribute.value,
+                            shortType: attribute.shortType,
                              save: function (model) {
                                 var updatedAttribute = angular.copy(attribute);
                                 updatedAttribute.value = model.value;

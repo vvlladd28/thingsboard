@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /*@ngInject*/
-export default function EditAttributeValueController($scope, $q, $element, types, attributeValue, save) {
+export default function EditAttributeValueController($scope, $q, $element, types, attributeValue, shortType, save) {
 
     $scope.valueTypes = types.valueType;
 
@@ -22,16 +22,28 @@ export default function EditAttributeValueController($scope, $q, $element, types
 
     $scope.model.value = attributeValue;
 
-    if ($scope.model.value === true || $scope.model.value === false) {
-        $scope.valueType = types.valueType.boolean;
-    } else if (angular.isNumber($scope.model.value)) {
-        if ($scope.model.value.toString().indexOf('.') == -1) {
+    switch (shortType) {
+        case "S":
+            $scope.valueType = types.valueType.string;
+            break;
+        case "L":
             $scope.valueType = types.valueType.integer;
-        } else {
+            break;
+        case "D":
             $scope.valueType = types.valueType.double;
-        }
-    } else {
-        $scope.valueType = types.valueType.string;
+            break;
+        case "B":
+            $scope.valueType = types.valueType.boolean;
+            break;
+        case "J":
+            $scope.valueType = types.valueType.json;
+            console.log('$scope.model.value do', $scope.model.value);   //eslint-disable-line
+            $scope.model.value = angular.toJson(attributeValue);
+            console.log('$scope.model.value after', $scope.model.value);    //eslint-disable-line
+            break;
+         default:
+             $scope.valueType = types.valueType.string;
+            break;
     }
 
     $scope.submit = submit;

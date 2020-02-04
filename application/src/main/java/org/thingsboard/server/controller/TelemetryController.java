@@ -536,7 +536,7 @@ public class TelemetryController extends BaseController {
             @Override
             public void onSuccess(List<AttributeKvEntry> attributes) {
                 List<AttributeData> values = attributes.stream().map(attribute -> new AttributeData(attribute.getLastUpdateTs(),
-                        attribute.getKey(), attribute.getValue())).collect(Collectors.toList());
+                        attribute.getKey(), attribute.getValue(), attribute.getDataType().name().substring(0,1))).collect(Collectors.toList());
                 logAttributesRead(user, entityId, scope, keyList, null);
                 response.setResult(new ResponseEntity<>(values, HttpStatus.OK));
             }
@@ -639,7 +639,7 @@ public class TelemetryController extends BaseController {
             String key = entry.getKey();
             JsonNode value = entry.getValue();
             if (entry.getValue().isObject()) {
-                attributes.add(new BaseAttributeKvEntry(new JsonDataEntry(key, value.asText()), ts));
+                attributes.add(new BaseAttributeKvEntry(new JsonDataEntry(key, value.toString()), ts));
             } else if (entry.getValue().isTextual()) {
                 if (maxStringValueLength > 0 && entry.getValue().textValue().length() > maxStringValueLength) {
                     String message = String.format("String value length [%d] for key [%s] is greater than maximum allowed [%d]", entry.getValue().textValue().length(), key, maxStringValueLength);

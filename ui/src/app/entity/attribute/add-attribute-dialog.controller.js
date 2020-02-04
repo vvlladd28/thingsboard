@@ -33,6 +33,9 @@ export default function AddAttributeDialogController($scope, $mdDialog, types, a
 
     function add() {
         $scope.theForm.$setPristine();
+        if (vm.valueType===types.valueType.json) {
+            vm.attribute.value = angular.fromJson(vm.attribute.value);
+        }
         attributeService.saveEntityAttributes(entityType, entityId, attributeScope, [vm.attribute]).then(
             function success() {
                 $mdDialog.hide();
