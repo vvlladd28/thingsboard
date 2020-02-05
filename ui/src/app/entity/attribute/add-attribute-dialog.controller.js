@@ -13,10 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-/*@ngInject*/
-export default function AddAttributeDialogController($scope, $mdDialog, types, attributeService, entityType, entityId, attributeScope) {
 
-    var vm = this;
+/* eslint-disable import/no-unresolved, import/default */
+
+import attributeDialogEditJsonTemplate from './attribute-dialog-edit-json.tpl.html';
+
+/* eslint-enable import/no-unresolved, import/default */
+
+import AttributeDialogEditJsonController from './attribute-dialog-edit-json.controller';
+
+/*@ngInject*/
+export default function AddAttributeDialogController($scope, $mdDialog, $document, types, attributeService, entityType, entityId, attributeScope) {
+
+    let vm = this;
 
     vm.attribute = {};
 
@@ -34,7 +43,9 @@ export default function AddAttributeDialogController($scope, $mdDialog, types, a
     function add() {
         $scope.theForm.$setPristine();
         if (vm.valueType===types.valueType.json) {
+            console.log("value json add do", vm.attribute.value);   //eslint-disable-line
             vm.attribute.value = angular.fromJson(vm.attribute.value);
+            console.log("valueStr json add ", vm.attribute.viewJsonStr);    //eslint-disable-line
             console.log("value json add", vm.attribute.value);    //eslint-disable-line
         }
         attributeService.saveEntityAttributes(entityType, entityId, attributeScope, [vm.attribute]).then(
@@ -47,8 +58,42 @@ export default function AddAttributeDialogController($scope, $mdDialog, types, a
     $scope.$watch('vm.valueType', function() {
         if (vm.valueType === types.valueType.boolean) {
             vm.attribute.value = false;
+        }
+        else if (vm.valueType === types.valueType.json) {
+            // vm.attribute.value = null;
+            vm.attribute.value = {"testKey":"eoiruoeiurg eorigfweorifg ewifgjeoijhrfgoeijrfgoierjhfgfneworifgjeoqwirjhfjhnfveojir",
+                "newLey": "xzmcnvbasdhqew;ir bcwqeijrhfioqwed bc qweiehqiweedcbb cqwioueierucb"};
+            vm.attribute.viewJsonStr =  angular.toJson(vm.attribute.value);
+            // vm.attribute.viewJsonStr =  null;
         } else {
             vm.attribute.value = null;
         }
     });
+
+
+    vm.editJson = ($event, jsonValue) => {
+        if ($event) {
+            $event.stopPropagation();
+        }
+        $mdDialog.show({
+            controller: AttributeDialogEditJsonController,
+            controllerAs: 'vm',
+            templateUrl: attributeDialogEditJsonTemplate,
+            parent: angular.element($document[0].body),
+            locals: {
+                jsonValue: jsonValue
+            },
+            targetEvent: $event,
+            fullscreen: true,
+            multiple: true,
+        }).then(function (jsonValue) {
+            if (jsonValue) {
+                console.log("jsonValue after", jsonValue);  //eslint-disable-line
+                vm.attribute.value = jsonValue;
+                vm.attribute.viewJsonStr = angular.toJson(vm.attribute.value);
+            }
+        }, function () {
+        });
+
+    };
 }

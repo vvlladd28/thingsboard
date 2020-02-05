@@ -1174,7 +1174,9 @@
     "js-func": {
         "no-return-error": "Function must return value!",
         "return-type-mismatch": "Function must return value of '{{type}}' type!",
-        "tidy": "Tidy"
+        "tidy": "Tidy",
+        "mini": "Mini",
+        "minifier": "Minifier"
     },
     "key-val": {
         "key": "Key",

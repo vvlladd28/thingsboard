@@ -164,6 +164,7 @@ export default function AttributeTableDirective($compile, $templateCache, $rootS
                 scope.checkSubscription();
                 scope.attributesDeferred = attributeService.getEntityAttributes(scope.entityType, scope.entityId, scope.attributeScope.value,
                     scope.query, function(attributes, update, apply) {
+                        console.log("attributes start", attributes);    //eslint-disable-line
                         success(attributes, update || forceUpdate, apply);
                     }
                 );

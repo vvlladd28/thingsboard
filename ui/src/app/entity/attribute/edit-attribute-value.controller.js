@@ -13,6 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+/* eslint-enable import/no-unresolved, import/default */
+
+import addAttributeDialogController from './add-attribute-dialog.controller';
+
 /*@ngInject*/
 export default function EditAttributeValueController($scope, $q, $element, types, attributeValue, save) {
 
@@ -21,6 +26,9 @@ export default function EditAttributeValueController($scope, $q, $element, types
     $scope.model = {};
 
     $scope.model.value = attributeValue;
+
+
+
     console.log("$scope.model.value Edit", $scope.model.value);    //eslint-disable-line
     if ($scope.model.value === true || $scope.model.value === false) {
         $scope.valueType = types.valueType.boolean;
@@ -32,12 +40,14 @@ export default function EditAttributeValueController($scope, $q, $element, types
         }
     } else if (angular.isObject($scope.model.value)){
         $scope.model.viewJsonStr = angular.toJson($scope.model.value);
-        console.log("$scope.model.value Json", $scope.model.valuejson);    //eslint-disable-line
+        console.log("$scope.model.value Json", $scope.model.viewJsonStr);    //eslint-disable-line
+        console.log("$scope.model.value ", $scope.model.value);    //eslint-disable-line
         $scope.valueType = types.valueType.json;
     }  else {
         $scope.valueType = types.valueType.string;
     }
 
+    $scope.editJson = addAttributeDialogController.editJson;
     $scope.submit = submit;
     $scope.dismiss = dismiss;
 
@@ -70,6 +80,7 @@ export default function EditAttributeValueController($scope, $q, $element, types
         });
     }
 
+
     $scope.$watch('valueType', function(newVal, prevVal) {
         if (newVal != prevVal) {
             if ($scope.valueType === types.valueType.boolean) {
@@ -79,4 +90,5 @@ export default function EditAttributeValueController($scope, $q, $element, types
             }
         }
     });
+
 }

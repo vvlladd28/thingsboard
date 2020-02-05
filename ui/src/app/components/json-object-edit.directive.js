@@ -28,6 +28,10 @@ import jsonObjectEditTemplate from './json-object-edit.tpl.html';
 
 /* eslint-enable import/no-unresolved, import/default */
 
+import beautify from 'js-beautify';
+
+const js_beautify = beautify.js;
+
 export default angular.module('thingsboard.directives.jsonObjectEdit', [])
     .directive('tbJsonObjectEdit', JsonObjectEdit)
     .name;
@@ -48,6 +52,16 @@ function JsonObjectEdit($compile, $templateCache, $document, toast, utils) {
 
         scope.onFullscreenChanged = function () {
             updateEditorSize();
+        };
+
+        scope.beautifyJson = function () {
+            var res = js_beautify(scope.contentBody, {indent_size: 4, wrap_line_length: 60});
+            scope.contentBody = res;
+        };
+
+        scope.minifierJson = function () {
+            var res = js_beautify(scope.contentBody, {indent_size: 2, wrap_line_length: 60});
+            scope.contentBody = res;
         };
 
         function updateEditorSize() {
@@ -83,6 +97,7 @@ function JsonObjectEdit($compile, $templateCache, $document, toast, utils) {
         };
 
         scope.$watch('contentBody', function (newVal, prevVal) {
+            console.log("contentBody", newVal, prevVal);  //eslint-disable-line
             if (!angular.equals(newVal, prevVal)) {
                 var object = scope.validate();
                 if (scope.objectValid) {
@@ -101,6 +116,8 @@ function JsonObjectEdit($compile, $templateCache, $document, toast, utils) {
                     }
                     ngModelCtrl.$setViewValue(scope.object);
                 }
+                //change to dirty
+                ngModelCtrl.$setDirty();
                 scope.updateValidity();
             }
         });
