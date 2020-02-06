@@ -60,16 +60,15 @@ export default function AddAttributeDialogController($scope, $mdDialog, $documen
             vm.attribute.value = false;
         }
         else if (vm.valueType === types.valueType.json) {
-            // vm.attribute.value = null;
-            vm.attribute.value = {"testKey":"eoiruoeiurg eorigfweorifg ewifgjeoijhrfgoeijrfgoierjhfgfneworifgjeoqwirjhfjhnfveojir",
-                "newLey": "xzmcnvbasdhqew;ir bcwqeijrhfioqwed bc qweiehqiweedcbb cqwioueierucb"};
-            vm.attribute.viewJsonStr =  angular.toJson(vm.attribute.value);
-            // vm.attribute.viewJsonStr =  null;
+            vm.attribute.value = null;
+            vm.attribute.viewJsonStr =  null;
+            // vm.attribute.value = {"testKey":"eoiruoeiurg eorigfweorifg ewifgjeoijhrfgoeijrfgoierjhfgfneworifgjeoqwirjhfjhnfveojir",
+            //     "newLey": "xzmcnvbasdhqew;ir bcwqeijrhfioqwed bc qweiehqiweedcbb cqwioueierucb"};
+            // vm.attribute.viewJsonStr =  angular.toJson(vm.attribute.value);
         } else {
             vm.attribute.value = null;
         }
     });
-
 
     vm.editJson = ($event, jsonValue) => {
         if ($event) {
@@ -94,6 +93,5 @@ export default function AddAttributeDialogController($scope, $mdDialog, $documen
             }
         }, function () {
         });
-
     };
 }

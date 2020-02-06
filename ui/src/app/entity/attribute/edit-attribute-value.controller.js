@@ -16,10 +16,11 @@
 
 /* eslint-enable import/no-unresolved, import/default */
 
-import addAttributeDialogController from './add-attribute-dialog.controller';
+import AttributeDialogEditJsonController from "./attribute-dialog-edit-json.controller";
+import attributeDialogEditJsonTemplate from "./attribute-dialog-edit-json.tpl.html";
 
 /*@ngInject*/
-export default function EditAttributeValueController($scope, $q, $element, types, attributeValue, save) {
+export default function EditAttributeValueController($scope, $mdDialog, $document, $q, $element, types, attributeValue, save) {
 
     $scope.valueTypes = types.valueType;
 
@@ -27,7 +28,7 @@ export default function EditAttributeValueController($scope, $q, $element, types
 
     $scope.model.value = attributeValue;
 
-
+    $scope.hideDialog = false;
 
     console.log("$scope.model.value Edit", $scope.model.value);    //eslint-disable-line
     if ($scope.model.value === true || $scope.model.value === false) {
@@ -38,16 +39,15 @@ export default function EditAttributeValueController($scope, $q, $element, types
         } else {
             $scope.valueType = types.valueType.double;
         }
-    } else if (angular.isObject($scope.model.value)){
+    } else if (angular.isObject($scope.model.value)) {
         $scope.model.viewJsonStr = angular.toJson($scope.model.value);
         console.log("$scope.model.value Json", $scope.model.viewJsonStr);    //eslint-disable-line
         console.log("$scope.model.value ", $scope.model.value);    //eslint-disable-line
         $scope.valueType = types.valueType.json;
-    }  else {
+    } else {
         $scope.valueType = types.valueType.string;
     }
 
-    $scope.editJson = addAttributeDialogController.editJson;
     $scope.submit = submit;
     $scope.dismiss = dismiss;
 
@@ -56,17 +56,11 @@ export default function EditAttributeValueController($scope, $q, $element, types
     }
 
     function update() {
-        console.log("$scope.model", $scope.model);  //eslint-disable-line
-        if ($scope.valueType===types.valueType.json) {
-            $scope.model.value = angular.fromJson($scope.model.value);
-            console.log("$scope.model json", $scope.model);  //eslint-disable-line
-        }
-
-        if($scope.editDialog.$invalid) {
+        if ($scope.editDialog.$invalid) {
             return $q.reject();
         }
 
-        if(angular.isFunction(save)) {
+        if (angular.isFunction(save)) {
 
             return $q.when(save($scope.model));
         }
@@ -81,7 +75,7 @@ export default function EditAttributeValueController($scope, $q, $element, types
     }
 
 
-    $scope.$watch('valueType', function(newVal, prevVal) {
+    $scope.$watch('valueType', function (newVal, prevVal) {
         if (newVal != prevVal) {
             if ($scope.valueType === types.valueType.boolean) {
                 $scope.model.value = false;
@@ -90,5 +84,39 @@ export default function EditAttributeValueController($scope, $q, $element, types
             }
         }
     });
+
+    $scope.$watch('model.value', function (newVal, prevVal) {
+        if (!angular.equals(newVal, prevVal)) {
+            console.log("$watch_value", newVal, prevVal);      //eslint-disable-line
+            $scope.editDialog.$setDirty();
+        }
+    });
+
+    $scope.editJson = function ($event, jsonValue) {
+        if ($event) {
+            $event.stopPropagation();
+        }
+        $scope.hideDialog = true;
+        $mdDialog.show({
+            controller: AttributeDialogEditJsonController,
+            controllerAs: 'vm',
+            templateUrl: attributeDialogEditJsonTemplate,
+            parent: angular.element($document[0].body),
+            locals: {
+                jsonValue: jsonValue
+            },
+            targetEvent: $event,
+            fullscreen: true,
+            multiple: true,
+        }).then(function (jsonValue) {
+            if (jsonValue) {
+                $scope.model.value = jsonValue;
+                $scope.model.viewJsonStr = angular.toJson($scope.model.value);
+            }
+            $scope.hideDialog = false;
+        }, function () {
+            $scope.hideDialog = false;
+        });
+    };
 
 }

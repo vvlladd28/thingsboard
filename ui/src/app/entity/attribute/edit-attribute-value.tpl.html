@@ -15,8 +15,8 @@
     limitations under the License.
 
 -->
-<md-edit-dialog>
-    <form name="editDialog" ng-submit="submit()">
+<md-edit-dialog ng-hide="hideDialog" >
+    <form name="editDialog" ng-submit="submit()" >
         <div layout="column" class="md-content" style="width: 400px;">
             <fieldset>
                 <section layout="row">
@@ -60,15 +60,15 @@
                     <div layout="row" ng-if="valueType===valueTypes.json" flex="60">
                         <md-input-container class="md-block">
                             <label translate>value.json-value</label>
-                            <div ng-click="editJson($event, vm.attribute.value)">
-                                <input required name="value" ng-model="model.viewJsonStr" ng-disabled=true>
-                                <div ng-messages="editDialog.value.$error">
-                                    <div translate ng-message="required">attribute.value-required</div>
-                                </div>
+                            <input required name="value" ng-model="model.viewJsonStr"
+                                   ng-click="editJson($event, model.value)"
+                                   readonly="true">
+                            <div ng-messages="editDialog.value.$error">
+                                <div translate ng-message="required">attribute.value-required</div>
                             </div>
                         </md-input-container>
                         <md-button class="md-icon-button"
-                                   ng-click="editJson($event, vm.attribute.value)"
+                                   ng-click="editJson($event, model.value)"
                                    aria-label="{{ 'action.edit' | translate }}">
                             <md-tooltip md-direction="top">
                                 {{ 'action.edit' | translate }}
@@ -83,7 +83,6 @@
             <md-button ng-click="dismiss()">{{ 'action.cancel' |
                 translate }}
             </md-button>
-            <label>{{editDialog.$invalid}} || {{!editDialog.$dirty}}</label>
             <md-button ng-disabled="editDialog.$invalid || !editDialog.$dirty" type="submit"
                        class="md-raised md-primary">
                 {{ 'action.update' | translate }}
@@ -92,81 +91,3 @@
     </form>
 </md-edit-dialog>
 
-<!--<md-edit-dialog>-->
-<!--    <form name="editDialog" ng-submit="submit()">-->
-<!--        <div layout="column" class="md-content" style="width: 400px;">-->
-<!--            <fieldset>-->
-<!--                <section layout="row">-->
-<!--                    <md-input-container flex="40" class="md-block">-->
-<!--                        <label translate>value.type</label>-->
-<!--                        <md-select ng-model="valueType">-->
-<!--                            <md-option ng-repeat="type in valueTypes" ng-value="type">-->
-<!--                                <md-icon md-svg-icon="{{ type.icon }}"></md-icon>-->
-<!--                                <span>{{type.name | translate}}</span>-->
-<!--                            </md-option>-->
-<!--                        </md-select>-->
-<!--                    </md-input-container>-->
-<!--                    <md-input-container ng-if="valueType===valueTypes.string" flex="60" class="md-block">-->
-<!--                        <label translate>value.string-value</label>-->
-<!--                        <input required name="value" ng-model="model.value">-->
-<!--                        <div ng-messages="editDialog.value.$error">-->
-<!--                            <div translate ng-message="required">attribute.value-required</div>-->
-<!--                        </div>-->
-<!--                    </md-input-container>-->
-<!--                    <md-input-container ng-if="valueType===valueTypes.integer" flex="60" class="md-block">-->
-<!--                        <label translate>value.integer-value</label>-->
-<!--                        <input required name="value" type="number" step="1" ng-pattern="/^-?[0-9]+$/" ng-model="model.value">-->
-<!--                        <div ng-messages="editDialog.value.$error">-->
-<!--                            <div translate ng-message="required">attribute.value-required</div>-->
-<!--                            <div translate ng-message="pattern">value.invalid-integer-value</div>-->
-<!--                        </div>-->
-<!--                    </md-input-container>-->
-<!--                    <md-input-container ng-if="valueType===valueTypes.double" flex="60" class="md-block">-->
-<!--                        <label translate>value.double-value</label>-->
-<!--                        <input required name="value" type="number" step="any" ng-model="model.value">-->
-<!--                        <div ng-messages="editDialog.value.$error">-->
-<!--                            <div translate ng-message="required">attribute.value-required</div>-->
-<!--                        </div>-->
-<!--                    </md-input-container>-->
-<!--                    <div layout="column" layout-align="center" flex="60" ng-if="valueType===valueTypes.boolean">-->
-<!--                        <md-checkbox ng-model="model.value" style="margin-bottom: 0px;">-->
-<!--                            {{ (model.value ? 'value.true' : 'value.false') | translate }}-->
-<!--                        </md-checkbox>-->
-<!--                    </div>-->
-<!--                    <div layout="column" layout-align="center" flex>-->
-<!--                        <div layout="row" ng-if="vm.valueType===vm.valueTypes.json">-->
-<!--                            <md-input-container flex-->
-<!--                                                class="md-block">-->
-<!--                                <label translate>value.json-value</label>-->
-<!--                                <input required name="valueJson" ng-model="model.viewJsonStr"-->
-<!--                                       ng-disabled=true>-->
-<!--                                <div ng-messages="theForm.valueJson.$error">-->
-<!--                                    <div translate ng-message="required">attribute.value-required</div>-->
-<!--                                </div>-->
-<!--                            </md-input-container>-->
-<!--                            <md-button class="md-icon-button"-->
-<!--                                       ng-click="dismiss()"-->
-<!--                                       aria-label="{{ 'action.edit' | translate }}">-->
-<!--                                <md-tooltip md-direction="top">-->
-<!--                                    {{ 'action.edit' | translate }}-->
-<!--                                </md-tooltip>-->
-<!--                                <ng-md-icon size="20" icon="edit"></ng-md-icon>-->
-<!--                            </md-button>-->
-<!--                        </div>-->
-<!--                    </div>-->
-
-<!--                </section>-->
-<!--            </fieldset>-->
-<!--        </div>-->
-<!--        <div layout="row" layout-align="end" class="md-actions">-->
-<!--            <md-button ng-click="dismiss()">{{ 'action.cancel' |-->
-<!--                translate }}-->
-<!--            </md-button>-->
-<!--            <label >{{editDialog.$invalid}} || {{!editDialog.$dirty}}</label>-->
-<!--            <md-button ng-disabled="editDialog.$invalid || !editDialog.$dirty" type="submit"-->
-<!--                       class="md-raised md-primary">-->
-<!--                {{ 'action.update' | translate }}-->
-<!--            </md-button>-->
-<!--        </div>-->
-<!--    </form>-->
-<!--</md-edit-dialog>-->
