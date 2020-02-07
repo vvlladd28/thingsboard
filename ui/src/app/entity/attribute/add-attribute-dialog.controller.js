@@ -64,7 +64,7 @@ export default function AddAttributeDialogController($scope, $mdDialog, $documen
         }
     });
 
-    vm.editJson = ($event, jsonValue) => {
+    vm.editAddJson = ($event, jsonValue) => {
         if ($event) {
             $event.stopPropagation();
         }
