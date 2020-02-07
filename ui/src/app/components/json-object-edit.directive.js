@@ -111,7 +111,6 @@ function JsonObjectEdit($compile, $templateCache, $document, toast, utils) {
                     }
                     ngModelCtrl.$setViewValue(scope.object);
                 }
-                // ngModelCtrl.$setDirty();
                 scope.updateValidity();
             }
         });
@@ -180,7 +179,7 @@ function JsonObjectEdit($compile, $templateCache, $document, toast, utils) {
         });
 
         $compile(element.contents())(scope);
-    }
+    };
 
     return {
         restrict: "E",

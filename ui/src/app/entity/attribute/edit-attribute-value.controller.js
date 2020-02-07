@@ -28,9 +28,6 @@ export default function EditAttributeValueController($scope, $mdDialog, $documen
 
     $scope.model.value = attributeValue;
 
-    $scope.hideDialog = false;
-
-    console.log("$scope.model.value Edit", $scope.model.value);    //eslint-disable-line
     if ($scope.model.value === true || $scope.model.value === false) {
         $scope.valueType = types.valueType.boolean;
     } else if (angular.isNumber($scope.model.value)) {
@@ -41,8 +38,6 @@ export default function EditAttributeValueController($scope, $mdDialog, $documen
         }
     } else if (angular.isObject($scope.model.value)) {
         $scope.model.viewJsonStr = angular.toJson($scope.model.value);
-        console.log("$scope.model.value Json", $scope.model.viewJsonStr);    //eslint-disable-line
-        console.log("$scope.model.value ", $scope.model.value);    //eslint-disable-line
         $scope.valueType = types.valueType.json;
     } else {
         $scope.valueType = types.valueType.string;
@@ -59,12 +54,9 @@ export default function EditAttributeValueController($scope, $mdDialog, $documen
         if ($scope.editDialog.$invalid) {
             return $q.reject();
         }
-
         if (angular.isFunction(save)) {
-
             return $q.when(save($scope.model));
         }
-
         return $q.resolve();
     }
 
@@ -87,7 +79,6 @@ export default function EditAttributeValueController($scope, $mdDialog, $documen
 
     $scope.$watch('model.value', function (newVal, prevVal) {
         if (!angular.equals(newVal, prevVal)) {
-            console.log("$watch_value", newVal, prevVal);      //eslint-disable-line
             $scope.editDialog.$setDirty();
         }
     });

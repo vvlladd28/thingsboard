@@ -43,10 +43,7 @@ export default function AddAttributeDialogController($scope, $mdDialog, $documen
     function add() {
         $scope.theForm.$setPristine();
         if (vm.valueType===types.valueType.json) {
-            console.log("value json add do", vm.attribute.value);   //eslint-disable-line
             vm.attribute.value = angular.fromJson(vm.attribute.value);
-            console.log("valueStr json add ", vm.attribute.viewJsonStr);    //eslint-disable-line
-            console.log("value json add", vm.attribute.value);    //eslint-disable-line
         }
         attributeService.saveEntityAttributes(entityType, entityId, attributeScope, [vm.attribute]).then(
             function success() {
@@ -62,9 +59,6 @@ export default function AddAttributeDialogController($scope, $mdDialog, $documen
         else if (vm.valueType === types.valueType.json) {
             vm.attribute.value = null;
             vm.attribute.viewJsonStr =  null;
-            // vm.attribute.value = {"testKey":"eoiruoeiurg eorigfweorifg ewifgjeoijhrfgoeijrfgoierjhfgfneworifgjeoqwirjhfjhnfveojir",
-            //     "newLey": "xzmcnvbasdhqew;ir bcwqeijrhfioqwed bc qweiehqiweedcbb cqwioueierucb"};
-            // vm.attribute.viewJsonStr =  angular.toJson(vm.attribute.value);
         } else {
             vm.attribute.value = null;
         }
@@ -87,7 +81,6 @@ export default function AddAttributeDialogController($scope, $mdDialog, $documen
             multiple: true,
         }).then(function (jsonValue) {
             if (jsonValue) {
-                console.log("jsonValue after", jsonValue);  //eslint-disable-line
                 vm.attribute.value = jsonValue;
                 vm.attribute.viewJsonStr = angular.toJson(vm.attribute.value);
             }

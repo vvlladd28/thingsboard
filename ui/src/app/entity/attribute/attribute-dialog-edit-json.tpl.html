@@ -16,12 +16,10 @@
 
 -->
 <md-dialog>
-    <form name="theForm" ng-submit="vm.save()"  class="attribute-edit-json-dialog">
+    <form name="theForm" ng-submit="vm.save()" class="attribute-edit-json-dialog">
         <md-toolbar>
             <div class="md-toolbar-tools">
-                <h2>
-                    Edit Json
-                </h2>
+                <h2>{{ 'action.edit' | translate }} {{ 'value.json' | translate }}</h2>
                 <span flex></span>
                 <md-button class="md-icon-button"
                            ng-click="vm.cancel()"

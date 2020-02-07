@@ -53,7 +53,7 @@
                         </div>
                     </md-input-container>
                     <div layout="column" layout-align="center" flex="60" ng-if="valueType===valueTypes.boolean">
-                        <md-checkbox ng-model="model.value" style="margin-bottom: 0px;">
+                        <md-checkbox ng-model="model.value" style="margin-bottom: 0;">
                             {{ (model.value ? 'value.true' : 'value.false') | translate }}
                         </md-checkbox>
                     </div>
@@ -80,8 +80,7 @@
             </fieldset>
         </div>
         <div layout="row" layout-align="end" class="md-actions">
-            <md-button ng-click="dismiss()">{{ 'action.cancel' |
-                translate }}
+            <md-button ng-click="dismiss()">{{ 'action.cancel' | translate }}
             </md-button>
             <md-button ng-disabled="editDialog.$invalid || !editDialog.$dirty" type="submit"
                        class="md-raised md-primary">
