@@ -19,11 +19,12 @@
 import './attribute-dialog-edit-json.scss';
 
 /*@ngInject*/
-export default function AttributeDialogEditJsonController($scope, $mdDialog, $document, $window, jsonValue) {
+export default function AttributeDialogEditJsonController($scope, $mdDialog, $document, $window, jsonValue, readOnly) {
 
     let vm = this;
     vm.doc = $document[0];
     vm.jsonValue = angular.copy(jsonValue);
+    vm.readOnly = readOnly;
 
     vm.save = () => {
         $mdDialog.hide(vm.jsonValue);

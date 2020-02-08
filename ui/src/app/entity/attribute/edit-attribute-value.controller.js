@@ -83,7 +83,7 @@ export default function EditAttributeValueController($scope, $mdDialog, $documen
         }
     });
 
-    $scope.editJson = function ($event, jsonValue) {
+    $scope.editJson = function ($event, jsonValue, readOnly) {
         if ($event) {
             $event.stopPropagation();
         }
@@ -94,7 +94,8 @@ export default function EditAttributeValueController($scope, $mdDialog, $documen
             templateUrl: attributeDialogEditJsonTemplate,
             parent: angular.element($document[0].body),
             locals: {
-                jsonValue: jsonValue
+                jsonValue: jsonValue,
+                readOnly: readOnly
             },
             targetEvent: $event,
             fullscreen: true,

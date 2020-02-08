@@ -61,14 +61,14 @@
                         <md-input-container class="md-block">
                             <label translate>value.json-value</label>
                             <input required name="value" ng-model="model.viewJsonStr"
-                                   ng-click="editJson($event, model.value)"
+                                   ng-click="editJson($event, model.value, false)"
                                    readonly="true">
                             <div ng-messages="editDialog.value.$error">
                                 <div translate ng-message="required">attribute.value-required</div>
                             </div>
                         </md-input-container>
                         <md-button class="md-icon-button"
-                                   ng-click="editJson($event, model.value)"
+                                   ng-click="editJson($event, model.value, false)"
                                    aria-label="{{ 'action.edit' | translate }}">
                             <md-tooltip md-direction="top">
                                 {{ 'action.edit' | translate }}

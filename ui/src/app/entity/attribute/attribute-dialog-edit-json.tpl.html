@@ -33,7 +33,8 @@
                     ng-model="vm.jsonValue"
                     label="{{ 'value.json-value' | translate }}"
                     ng-required="required"
-                    fill-height="false">
+                    fill-height="false"
+                    ng-readonly="vm.readOnly">
             </tb-json-object-edit>
         </div>
         <md-dialog-actions layout="row" layout-align="end center" class="action-buttons">

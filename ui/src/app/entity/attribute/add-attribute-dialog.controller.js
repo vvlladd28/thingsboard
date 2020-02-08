@@ -64,7 +64,7 @@ export default function AddAttributeDialogController($scope, $mdDialog, $documen
         }
     });
 
-    vm.editAddJson = ($event, jsonValue) => {
+    vm.editAddJson = ($event, jsonValue, readOnly) => {
         if ($event) {
             $event.stopPropagation();
         }
@@ -74,7 +74,8 @@ export default function AddAttributeDialogController($scope, $mdDialog, $documen
             templateUrl: attributeDialogEditJsonTemplate,
             parent: angular.element($document[0].body),
             locals: {
-                jsonValue: jsonValue
+                jsonValue: jsonValue,
+                readOnly: readOnly
             },
             targetEvent: $event,
             fullscreen: true,
