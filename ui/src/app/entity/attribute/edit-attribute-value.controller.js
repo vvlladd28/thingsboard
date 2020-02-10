@@ -79,27 +79,29 @@ export default function EditAttributeValueController($scope, $mdDialog, $documen
         }
     });
 
-    $scope.$watch('model.value', function (newVal, prevVal) {
-        if (!angular.equals(newVal, prevVal)) {
-            $scope.editDialog.$setDirty();
-        }
-    });
-
     function editJson($event, jsonValue, readOnly) {
         showJsonDialog($event, jsonValue, readOnly).then((response) => {
-            if (response) {
+            $scope.hideDialog = false;
+            if (response || response === null) {
+                if (!angular.equals(response, $scope.model.value)) {
+                    $scope.editDialog.$setDirty();
+                }
                 $scope.model.value = response;
-                $scope.model.viewJsonStr = angular.toJson($scope.model.value);
+                if (response === null) {
+                    $scope.model.viewJsonStr = null;
+                } else {
+                    $scope.model.viewJsonStr = angular.toJson($scope.model.value);
+                }
             }
         })
     }
 
     function showJsonDialog($event, jsonValue, readOnly) {
-        let deferred = $q.defer();
         if ($event) {
             $event.stopPropagation();
         }
-        $mdDialog.show({
+        $scope.hideDialog = true;
+        const promis = $mdDialog.show({
             controller: AttributeDialogEditJsonController,
             controllerAs: 'vm',
             templateUrl: attributeDialogEditJsonTemplate,
@@ -111,12 +113,7 @@ export default function EditAttributeValueController($scope, $mdDialog, $documen
             targetEvent: $event,
             fullscreen: true,
             multiple: true,
-        }).then(function (jsonValue) {
-            deferred.resolve(jsonValue);
-        }, function () {
-            deferred.reject();
         });
-        return deferred.promise;
+        return promis;
     }
-
 }

@@ -66,19 +66,22 @@ export default function AddAttributeDialogController($scope, $mdDialog, $documen
 
     vm.addJson = ($event, jsonValue, readOnly) => {
         showJsonDialog($event, jsonValue, readOnly).then((response) => {
-            if (response) {
+            if (response || response === null) {
                 vm.attribute.value = response;
-                vm.attribute.viewJsonStr = angular.toJson(vm.attribute.value);
+                if (response === null) {
+                    vm.attribute.viewJsonStr = null;
+                } else {
+                    vm.attribute.viewJsonStr = angular.toJson(vm.attribute.value);
+                }
             }
         })
     };
 
     function showJsonDialog($event, jsonValue, readOnly) {
-        let deferred = $q.defer();
         if ($event) {
             $event.stopPropagation();
         }
-        $mdDialog.show({
+        const promis = $mdDialog.show({
             controller: AttributeDialogEditJsonController,
             controllerAs: 'vm',
             templateUrl: attributeDialogEditJsonTemplate,
@@ -90,11 +93,8 @@ export default function AddAttributeDialogController($scope, $mdDialog, $documen
             targetEvent: $event,
             fullscreen: true,
             multiple: true,
-        }).then(function (jsonValue) {
-            deferred.resolve(jsonValue);
-        }, function () {
-            deferred.reject();
         });
-        return deferred.promise;
+
+        return promis;
     }
 }
