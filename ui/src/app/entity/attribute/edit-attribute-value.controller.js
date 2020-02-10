@@ -28,6 +28,8 @@ export default function EditAttributeValueController($scope, $mdDialog, $documen
 
     $scope.model.value = attributeValue;
 
+    $scope.editJson = editJson;
+
     if ($scope.model.value === true || $scope.model.value === false) {
         $scope.valueType = types.valueType.boolean;
     } else if (angular.isNumber($scope.model.value)) {
@@ -83,11 +85,20 @@ export default function EditAttributeValueController($scope, $mdDialog, $documen
         }
     });
 
-    $scope.editJson = function ($event, jsonValue, readOnly) {
+    function editJson($event, jsonValue, readOnly) {
+        showJsonDialog($event, jsonValue, readOnly).then((response) => {
+            if (response) {
+                $scope.model.value = response;
+                $scope.model.viewJsonStr = angular.toJson($scope.model.value);
+            }
+        })
+    }
+
+    function showJsonDialog($event, jsonValue, readOnly) {
+        let deferred = $q.defer();
         if ($event) {
             $event.stopPropagation();
         }
-        $scope.hideDialog = true;
         $mdDialog.show({
             controller: AttributeDialogEditJsonController,
             controllerAs: 'vm',
@@ -101,14 +112,11 @@ export default function EditAttributeValueController($scope, $mdDialog, $documen
             fullscreen: true,
             multiple: true,
         }).then(function (jsonValue) {
-            if (jsonValue) {
-                $scope.model.value = jsonValue;
-                $scope.model.viewJsonStr = angular.toJson($scope.model.value);
-            }
-            $scope.hideDialog = false;
+            deferred.resolve(jsonValue);
         }, function () {
-            $scope.hideDialog = false;
+            deferred.reject();
         });
-    };
+        return deferred.promise;
+    }
 
 }

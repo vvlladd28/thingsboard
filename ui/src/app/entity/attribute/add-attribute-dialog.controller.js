@@ -23,7 +23,7 @@ import attributeDialogEditJsonTemplate from './attribute-dialog-edit-json.tpl.ht
 import AttributeDialogEditJsonController from './attribute-dialog-edit-json.controller';
 
 /*@ngInject*/
-export default function AddAttributeDialogController($scope, $mdDialog, $document, types, attributeService, entityType, entityId, attributeScope) {
+export default function AddAttributeDialogController($scope, $mdDialog, $document, $q, types, attributeService, entityType, entityId, attributeScope) {
 
     let vm = this;
 
@@ -64,7 +64,17 @@ export default function AddAttributeDialogController($scope, $mdDialog, $documen
         }
     });
 
-    vm.editAddJson = ($event, jsonValue, readOnly) => {
+    vm.addJson = ($event, jsonValue, readOnly) => {
+        showJsonDialog($event, jsonValue, readOnly).then((response) => {
+            if (response) {
+                vm.attribute.value = response;
+                vm.attribute.viewJsonStr = angular.toJson(vm.attribute.value);
+            }
+        })
+    };
+
+    function showJsonDialog($event, jsonValue, readOnly) {
+        let deferred = $q.defer();
         if ($event) {
             $event.stopPropagation();
         }
@@ -81,11 +91,10 @@ export default function AddAttributeDialogController($scope, $mdDialog, $documen
             fullscreen: true,
             multiple: true,
         }).then(function (jsonValue) {
-            if (jsonValue) {
-                vm.attribute.value = jsonValue;
-                vm.attribute.viewJsonStr = angular.toJson(vm.attribute.value);
-            }
+            deferred.resolve(jsonValue);
         }, function () {
+            deferred.reject();
         });
-    };
+        return deferred.promise;
+    }
 }

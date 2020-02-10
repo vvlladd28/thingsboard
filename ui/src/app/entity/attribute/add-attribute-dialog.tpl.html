@@ -84,14 +84,14 @@
                                     <md-input-container flex class="md-block">
                                         <label translate>value.json-value</label>
                                         <input required name="value" ng-model="vm.attribute.viewJsonStr"
-                                               ng-click="vm.editAddJson($event, vm.attribute.value, false)"
+                                               ng-click="vm.addJson($event, vm.attribute.value, false)"
                                                readonly=true>
                                         <div ng-messages="theForm.value.$error">
                                             <div translate ng-message="required">attribute.value-required</div>
                                         </div>
                                     </md-input-container>
                                     <md-button class="md-icon-button"
-                                               ng-click="vm.editAddJson($event, vm.attribute.value, false)"
+                                               ng-click="vm.addJson($event, vm.attribute.value, false)"
                                                aria-label="{{ 'action.edit' | translate }}">
                                         <md-tooltip md-direction="top">
                                             {{ 'action.edit' | translate }}
