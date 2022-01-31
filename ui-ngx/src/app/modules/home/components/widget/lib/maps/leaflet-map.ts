@@ -538,8 +538,6 @@ export default abstract class LeafletMap {
               const position = this.convertPosition(mData);
               if (!position) {
                 foundEntityWithoutLocation = true;
-              } else if (!!position) {
-                foundEntityWithLocation = true;
               }
               if (foundEntityWithoutLocation && foundEntityWithLocation) {
                 break;
