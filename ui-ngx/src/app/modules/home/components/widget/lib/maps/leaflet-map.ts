@@ -538,8 +538,6 @@ export default abstract class LeafletMap {
               const position = this.convertPosition(mData);
               if (!position) {
                 foundEntityWithoutLocation = true;
-              } else if (!!position) {
-                foundEntityWithLocation = true;
               }
               if (foundEntityWithoutLocation && foundEntityWithLocation) {
                 break;
@@ -554,8 +552,6 @@ export default abstract class LeafletMap {
               const isValidPolygon = this.isValidPolygonPosition(pData);
               if (!isValidPolygon) {
                 foundEntityWithoutPolygon = true;
-              } else if (isValidPolygon) {
-                foundEntityWithPolygon = true;
               }
               if (foundEntityWithoutPolygon && foundEntityWithPolygon) {
                 break;
