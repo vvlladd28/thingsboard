@@ -554,8 +554,6 @@ export default abstract class LeafletMap {
               const isValidPolygon = this.isValidPolygonPosition(pData);
               if (!isValidPolygon) {
                 foundEntityWithoutPolygon = true;
-              } else if (isValidPolygon) {
-                foundEntityWithPolygon = true;
               }
               if (foundEntityWithoutPolygon && foundEntityWithPolygon) {
                 break;
