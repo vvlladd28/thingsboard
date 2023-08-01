@@ -53,7 +53,7 @@ import { Direction } from '@shared/models/page/sort-order';
 import { CollectionViewer, DataSource, SelectionModel } from '@angular/cdk/collections';
 import { BehaviorSubject, forkJoin, fromEvent, merge, Observable, Subscription } from 'rxjs';
 import { emptyPageData, PageData } from '@shared/models/page/page-data';
-import { debounceTime, distinctUntilChanged, map, take, tap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, map, skip, startWith, take, tap } from 'rxjs/operators';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort, SortDirection } from '@angular/material/sort';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -242,6 +242,17 @@ export class AlarmsTableWidgetComponent extends PageComponent implements OnInit,
     icon: 'filter_list'
   };
 
+  private _textSearch: string | null;
+
+  get textSearch(): string | null {
+    return this._textSearch;
+  }
+
+  set textSearch(value: string | null) {
+    this.pageLink.textSearch = value !== null ? value.trim() : null;
+    this._textSearch = value;
+  }
+
   constructor(protected store: Store<AppState>,
               private elementRef: ElementRef,
               private ngZone: NgZone,
@@ -302,7 +313,10 @@ export class AlarmsTableWidgetComponent extends PageComponent implements OnInit,
     fromEvent(this.searchInputField.nativeElement, 'keyup')
       .pipe(
         debounceTime(150),
-        distinctUntilChanged(),
+        map(() => this.textSearch),
+        startWith(''),
+        distinctUntilChanged((a: string, b: string) => a.trim() === b.trim()),
+        skip(1),
         tap(() => {
           this.resetPageIndex();
           this.updateData();
@@ -644,7 +658,7 @@ export class AlarmsTableWidgetComponent extends PageComponent implements OnInit,
 
   private enterFilterMode() {
     this.textSearchMode = true;
-    this.pageLink.textSearch = '';
+    this.textSearch = '';
     this.ctx.hideTitlePanel = true;
     this.ctx.detectChanges(true);
     setTimeout(() => {
@@ -655,7 +669,7 @@ export class AlarmsTableWidgetComponent extends PageComponent implements OnInit,
 
   exitFilterMode() {
     this.textSearchMode = false;
-    this.pageLink.textSearch = null;
+    this.textSearch = null;
     this.resetPageIndex();
     this.updateData();
     this.ctx.hideTitlePanel = false;

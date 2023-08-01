@@ -58,7 +58,7 @@ import { BehaviorSubject, fromEvent, merge, Observable } from 'rxjs';
 import { emptyPageData, PageData } from '@shared/models/page/page-data';
 import { EntityId } from '@shared/models/id/entity-id';
 import { entityTypeTranslations } from '@shared/models/entity-type.models';
-import { debounceTime, distinctUntilChanged, map, tap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, map, skip, startWith, tap } from 'rxjs/operators';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort, SortDirection } from '@angular/material/sort';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -195,6 +195,17 @@ export class EntitiesTableWidgetComponent extends PageComponent implements OnIni
     }
   };
 
+  private _textSearch: string | null;
+
+  get textSearch(): string | null {
+    return this._textSearch;
+  }
+
+  set textSearch(value: string | null) {
+    this.pageLink.textSearch = value !== null ? value.trim() : null;
+    this._textSearch = value;
+  }
+
   constructor(protected store: Store<AppState>,
               private elementRef: ElementRef,
               private ngZone: NgZone,
@@ -244,7 +255,10 @@ export class EntitiesTableWidgetComponent extends PageComponent implements OnIni
     fromEvent(this.searchInputField.nativeElement, 'keyup')
       .pipe(
         debounceTime(150),
-        distinctUntilChanged(),
+        map(() => this.textSearch),
+        startWith(''),
+        distinctUntilChanged((a: string, b: string) => a.trim() === b.trim()),
+        skip(1),
         tap(() => {
           if (this.displayPagination) {
             this.paginator.pageIndex = 0;
@@ -534,7 +548,7 @@ export class EntitiesTableWidgetComponent extends PageComponent implements OnIni
 
   private enterFilterMode() {
     this.textSearchMode = true;
-    this.pageLink.textSearch = '';
+    this.textSearch = '';
     this.ctx.hideTitlePanel = true;
     this.ctx.detectChanges(true);
     setTimeout(() => {
@@ -545,7 +559,7 @@ export class EntitiesTableWidgetComponent extends PageComponent implements OnIni
 
   exitFilterMode() {
     this.textSearchMode = false;
-    this.pageLink.textSearch = null;
+    this.textSearch = null;
     if (this.displayPagination) {
       this.paginator.pageIndex = 0;
     }

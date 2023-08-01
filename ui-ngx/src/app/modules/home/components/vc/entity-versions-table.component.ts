@@ -36,7 +36,7 @@ import { CollectionViewer, DataSource } from '@angular/cdk/collections';
 import { BehaviorSubject, fromEvent, merge, Observable, of, ReplaySubject } from 'rxjs';
 import { emptyPageData, PageData } from '@shared/models/page/page-data';
 import { PageLink } from '@shared/models/page/page-link';
-import { catchError, debounceTime, distinctUntilChanged, map, tap } from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, map, skip, startWith, tap } from 'rxjs/operators';
 import { EntityVersion, VersionCreationResult, VersionLoadResult } from '@shared/models/vc.models';
 import { EntitiesVersionControlService } from '@core/http/entities-version-control.service';
 import { MatPaginator } from '@angular/material/paginator';
@@ -54,7 +54,7 @@ import { EntityVersionDiffComponent } from '@home/components/vc/entity-version-d
 import { ComplexVersionCreateComponent } from '@home/components/vc/complex-version-create.component';
 import { ComplexVersionLoadComponent } from '@home/components/vc/complex-version-load.component';
 import { TbPopoverComponent } from '@shared/components/popover.component';
-import { AdminService } from "@core/http/admin.service";
+import { AdminService } from '@core/http/admin.service';
 
 @Component({
   selector: 'tb-entity-versions-table',
@@ -91,6 +91,17 @@ export class EntityVersionsTableComponent extends PageComponent implements OnIni
   isReadOnly: Observable<boolean>;
 
   private componentResize$: ResizeObserver;
+
+  private _textSearch: string | null;
+
+  get textSearch(): string | null {
+    return this._textSearch;
+  }
+
+  set textSearch(value: string | null) {
+    this.pageLink.textSearch = value !== null ? value.trim() : null;
+    this._textSearch = value;
+  }
 
   @Input()
   set active(active: boolean) {
@@ -177,7 +188,10 @@ export class EntityVersionsTableComponent extends PageComponent implements OnIni
     fromEvent(this.searchInputField.nativeElement, 'keyup')
       .pipe(
         debounceTime(400),
-        distinctUntilChanged(),
+        map(() => this.textSearch),
+        startWith(''),
+        distinctUntilChanged((a: string, b: string) => a.trim() === b.trim()),
+        skip(1),
         tap(() => {
           this.paginator.pageIndex = 0;
           this.updateData();
@@ -341,7 +355,7 @@ export class EntityVersionsTableComponent extends PageComponent implements OnIni
 
   enterFilterMode() {
     this.textSearchMode = true;
-    this.pageLink.textSearch = '';
+    this.textSearch = '';
     setTimeout(() => {
       this.searchInputField.nativeElement.focus();
       this.searchInputField.nativeElement.setSelectionRange(0, 0);
@@ -350,7 +364,7 @@ export class EntityVersionsTableComponent extends PageComponent implements OnIni
 
   exitFilterMode() {
     this.textSearchMode = false;
-    this.pageLink.textSearch = null;
+    this.textSearch = null;
     this.paginator.pageIndex = 0;
     this.updateData();
   }
@@ -376,7 +390,7 @@ export class EntityVersionsTableComponent extends PageComponent implements OnIni
 
   private resetSortAndFilter(update: boolean) {
     this.textSearchMode = false;
-    this.pageLink.textSearch = null;
+    this.textSearch = null;
     if (this.viewsInited) {
       this.paginator.pageIndex = 0;
       const sortable = this.sort.sortables.get('timestamp');

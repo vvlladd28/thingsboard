@@ -36,7 +36,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort, SortDirection } from '@angular/material/sort';
 import { EntitiesDataSource } from '@home/models/datasource/entity-datasource';
-import { catchError, debounceTime, distinctUntilChanged, map, skip, tap } from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, map, skip, startWith, tap } from 'rxjs/operators';
 import { Direction, SortOrder } from '@shared/models/page/sort-order';
 import { forkJoin, fromEvent, merge, Observable, of, Subscription } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
@@ -127,6 +127,17 @@ export class EntitiesTableComponent extends PageComponent implements IEntitiesTa
   private widgetResize$: ResizeObserver;
 
   private rxSubscriptions = new Array<Subscription>();
+
+  private _textSearch: string | null;
+
+  get textSearch(): string | null {
+    return this._textSearch;
+  }
+
+  set textSearch(value: string | null) {
+    this.pageLink.textSearch = value !== null ? value.trim() : null;
+    this._textSearch = value;
+  }
 
   constructor(protected store: Store<AppState>,
               public route: ActivatedRoute,
@@ -270,7 +281,7 @@ export class EntitiesTableComponent extends PageComponent implements IEntitiesTa
       }
       if (routerQueryParams.hasOwnProperty('textSearch') && !isEmptyStr(routerQueryParams.textSearch)) {
         this.textSearchMode = true;
-        this.pageLink.textSearch = decodeURI(routerQueryParams.textSearch);
+        this.textSearch = decodeURI(routerQueryParams.textSearch);
       }
     }
     this.dataSource = this.entitiesTableConfig.dataSource(this.dataLoaded.bind(this));
@@ -308,10 +319,13 @@ export class EntitiesTableComponent extends PageComponent implements IEntitiesTa
     fromEvent(this.searchInputField.nativeElement, 'keyup')
       .pipe(
         debounceTime(150),
-        distinctUntilChanged(),
+        map(() => this.textSearch),
+        startWith(''),
+        distinctUntilChanged((a: string, b: string) => a.trim() === b.trim()),
+        skip(1),
         tap(() => {
           const queryParams: PageQueryParam = {
-            textSearch: isString(this.pageLink.textSearch) && this.pageLink.textSearch !== '' ? encodeURI(this.pageLink.textSearch) : null
+            textSearch: isString(this.textSearch) && this.textSearch !== '' ? encodeURI(this.textSearch) : null
           };
           if (this.displayPagination) {
             this.paginator.pageIndex = 0;
@@ -330,12 +344,6 @@ export class EntitiesTableComponent extends PageComponent implements IEntitiesTa
         }
         this.sort.active = params.property || this.entitiesTableConfig.defaultSortOrder.property;
         this.sort.direction = (params.direction || this.entitiesTableConfig.defaultSortOrder.direction).toLowerCase() as SortDirection;
-        if (params.hasOwnProperty('textSearch') && !isEmptyStr(params.textSearch)) {
-          this.textSearchMode = true;
-          this.pageLink.textSearch = decodeURI(params.textSearch);
-        } else {
-          this.pageLink.textSearch = null;
-        }
         this.updateData();
       });
     }
@@ -572,7 +580,7 @@ export class EntitiesTableComponent extends PageComponent implements IEntitiesTa
 
   enterFilterMode() {
     this.textSearchMode = true;
-    this.pageLink.textSearch = '';
+    this.textSearch = '';
     setTimeout(() => {
       this.searchInputField.nativeElement.focus();
       this.searchInputField.nativeElement.setSelectionRange(0, 0);
@@ -581,7 +589,7 @@ export class EntitiesTableComponent extends PageComponent implements IEntitiesTa
 
   exitFilterMode() {
     this.textSearchMode = false;
-    this.pageLink.textSearch = null;
+    this.textSearch = null;
     const queryParams: PageQueryParam = {
       textSearch: null
     };
@@ -594,7 +602,7 @@ export class EntitiesTableComponent extends PageComponent implements IEntitiesTa
 
   resetSortAndFilter(update: boolean = true, preserveTimewindow: boolean = false) {
     this.textSearchMode = false;
-    this.pageLink.textSearch = null;
+    this.textSearch = null;
     if (this.entitiesTableConfig.useTimePageLink && !preserveTimewindow) {
       this.timewindow = this.entitiesTableConfig.defaultTimewindowInterval;
     }
