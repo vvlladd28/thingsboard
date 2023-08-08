@@ -24,7 +24,7 @@ import { IWidgetSubscription, WidgetSubscriptionOptions } from '@core/api/widget
 import { UtilsService } from '@core/services/utils.service';
 import cssjs from '@core/css/css';
 import { fromEvent } from 'rxjs';
-import { debounceTime, distinctUntilChanged, tap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, map, skip, startWith, tap } from 'rxjs/operators';
 import { constructTableCssString } from '@home/components/widget/lib/table-widget.models';
 import { Overlay } from '@angular/cdk/overlay';
 import {
@@ -128,7 +128,10 @@ export class EntitiesHierarchyWidgetComponent extends PageComponent implements O
     fromEvent(this.searchInputField.nativeElement, 'keyup')
       .pipe(
         debounceTime(150),
-        distinctUntilChanged(),
+        map(() => this.textSearch),
+        startWith(''),
+        distinctUntilChanged((a: string, b: string) => a.trim() === b.trim()),
+        skip(1),
         tap(() => {
           this.updateSearchNodes();
         })
@@ -209,7 +212,7 @@ export class EntitiesHierarchyWidgetComponent extends PageComponent implements O
 
   private updateSearchNodes() {
     if (this.textSearch != null) {
-      this.nodeEditCallbacks.search(this.textSearch);
+      this.nodeEditCallbacks.search(this.textSearch.trim());
     } else {
       this.nodeEditCallbacks.clearSearch();
     }

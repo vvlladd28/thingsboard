@@ -36,7 +36,7 @@ import { DialogService } from '@core/services/dialog.service';
 import { EntityRelationService } from '@core/http/entity-relation.service';
 import { Direction, SortOrder } from '@shared/models/page/sort-order';
 import { forkJoin, fromEvent, merge, Observable } from 'rxjs';
-import { debounceTime, distinctUntilChanged, tap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, map, skip, startWith, tap } from 'rxjs/operators';
 import {
   EntityRelation,
   EntityRelationInfo,
@@ -110,6 +110,17 @@ export class RelationTableComponent extends PageComponent implements AfterViewIn
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
 
+  private _textSearch: string | null;
+
+  get textSearch(): string | null {
+    return this._textSearch;
+  }
+
+  set textSearch(value: string | null) {
+    this.pageLink.textSearch = value !== null ? value.trim() : null;
+    this._textSearch = value;
+  }
+
   constructor(protected store: Store<AppState>,
               private entityRelationService: EntityRelationService,
               public translate: TranslateService,
@@ -163,7 +174,10 @@ export class RelationTableComponent extends PageComponent implements AfterViewIn
     fromEvent(this.searchInputField.nativeElement, 'keyup')
       .pipe(
         debounceTime(150),
-        distinctUntilChanged(),
+        map(() => this.textSearch),
+        startWith(''),
+        distinctUntilChanged((a: string, b: string) => a.trim() === b.trim()),
+        skip(1),
         tap(() => {
           this.paginator.pageIndex = 0;
           this.updateData();
@@ -195,7 +209,7 @@ export class RelationTableComponent extends PageComponent implements AfterViewIn
 
   enterFilterMode() {
     this.textSearchMode = true;
-    this.pageLink.textSearch = '';
+    this.textSearch = '';
     setTimeout(() => {
       this.searchInputField.nativeElement.focus();
       this.searchInputField.nativeElement.setSelectionRange(0, 0);
@@ -204,7 +218,7 @@ export class RelationTableComponent extends PageComponent implements AfterViewIn
 
   exitFilterMode() {
     this.textSearchMode = false;
-    this.pageLink.textSearch = null;
+    this.textSearch = null;
     this.paginator.pageIndex = 0;
     this.updateData();
   }
@@ -212,7 +226,7 @@ export class RelationTableComponent extends PageComponent implements AfterViewIn
   resetSortAndFilter(update: boolean = true) {
     this.direction = EntitySearchDirection.FROM;
     this.updateColumns();
-    this.pageLink.textSearch = null;
+    this.textSearch = null;
     this.paginator.pageIndex = 0;
     const sortable = this.sort.sortables.get('type');
     this.sort.active = sortable.id;

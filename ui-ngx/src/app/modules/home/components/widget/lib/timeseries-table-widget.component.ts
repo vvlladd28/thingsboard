@@ -58,7 +58,7 @@ import { Direction, SortOrder, sortOrderFromString } from '@shared/models/page/s
 import { CollectionViewer, DataSource } from '@angular/cdk/collections';
 import { BehaviorSubject, fromEvent, merge, Observable, of, Subscription } from 'rxjs';
 import { emptyPageData, PageData } from '@shared/models/page/page-data';
-import { catchError, debounceTime, distinctUntilChanged, map, tap } from 'rxjs/operators';
+import { catchError, debounceTime, distinctUntilChanged, map, skip, startWith, tap } from 'rxjs/operators';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
@@ -265,10 +265,13 @@ export class TimeseriesTableWidgetComponent extends PageComponent implements OnI
     fromEvent(this.searchInputField.nativeElement, 'keyup')
       .pipe(
         debounceTime(150),
-        distinctUntilChanged(),
-        tap(() => {
+        map(() => this.textSearch),
+        startWith(''),
+        distinctUntilChanged((a: string, b: string) => a.trim() === b.trim()),
+        skip(1),
+        tap((textSearch) => {
           this.sources.forEach((source) => {
-            source.pageLink.textSearch = this.textSearch;
+            source.pageLink.textSearch = textSearch.trim();
             if (this.displayPagination) {
               source.pageLink.page = 0;
             }

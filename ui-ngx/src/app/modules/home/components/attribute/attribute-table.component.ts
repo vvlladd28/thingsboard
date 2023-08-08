@@ -39,7 +39,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { DialogService } from '@core/services/dialog.service';
 import { Direction, SortOrder } from '@shared/models/page/sort-order';
 import { fromEvent, merge } from 'rxjs';
-import { debounceTime, distinctUntilChanged, tap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, map, skip, startWith, tap } from 'rxjs/operators';
 import { EntityId } from '@shared/models/id/entity-id';
 import {
   AttributeData,
@@ -178,6 +178,17 @@ export class AttributeTableComponent extends PageComponent implements AfterViewI
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
 
+  private _textSearch: string | null;
+
+  get textSearch(): string | null {
+    return this._textSearch;
+  }
+
+  set textSearch(value: string | null) {
+    this.pageLink.textSearch = value !== null ? value.trim() : null;
+    this._textSearch = value;
+  }
+
   constructor(protected store: Store<AppState>,
               private attributeService: AttributeService,
               private telemetryWsService: TelemetryWebsocketService,
@@ -229,7 +240,10 @@ export class AttributeTableComponent extends PageComponent implements AfterViewI
     fromEvent(this.searchInputField.nativeElement, 'keyup')
       .pipe(
         debounceTime(150),
-        distinctUntilChanged(),
+        map(() => this.textSearch),
+        startWith(''),
+        distinctUntilChanged((a: string, b: string) => a.trim() === b.trim()),
+        skip(1),
         tap(() => {
           this.paginator.pageIndex = 0;
           this.updateData();
@@ -261,7 +275,7 @@ export class AttributeTableComponent extends PageComponent implements AfterViewI
 
   enterFilterMode() {
     this.textSearchMode = true;
-    this.pageLink.textSearch = '';
+    this.textSearch = '';
     setTimeout(() => {
       this.searchInputField.nativeElement.focus();
       this.searchInputField.nativeElement.setSelectionRange(0, 0);
@@ -270,7 +284,7 @@ export class AttributeTableComponent extends PageComponent implements AfterViewI
 
   exitFilterMode() {
     this.textSearchMode = false;
-    this.pageLink.textSearch = null;
+    this.textSearch = null;
     this.paginator.pageIndex = 0;
     this.updateData();
   }
@@ -288,7 +302,7 @@ export class AttributeTableComponent extends PageComponent implements AfterViewI
     this.textSearchMode = false;
     this.selectedWidgetsBundleAlias = null;
     this.attributeScope = this.defaultAttributeScope;
-    this.pageLink.textSearch = null;
+    this.textSearch = null;
     if (this.viewsInited) {
       this.paginator.pageIndex = 0;
       const sortable = this.sort.sortables.get('key');
