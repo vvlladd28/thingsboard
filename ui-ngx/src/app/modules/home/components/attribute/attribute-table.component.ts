@@ -38,8 +38,8 @@ import { TranslateService } from '@ngx-translate/core';
 import { MatDialog } from '@angular/material/dialog';
 import { DialogService } from '@core/services/dialog.service';
 import { Direction, SortOrder } from '@shared/models/page/sort-order';
-import { fromEvent, merge } from 'rxjs';
-import { debounceTime, distinctUntilChanged, map, skip, startWith, tap } from 'rxjs/operators';
+import { merge } from 'rxjs';
+import { debounceTime, distinctUntilChanged, skip, startWith, tap } from 'rxjs/operators';
 import { EntityId } from '@shared/models/id/entity-id';
 import {
   AttributeData,
@@ -86,6 +86,7 @@ import { deepClone } from '@core/utils';
 import { Filters } from '@shared/models/query/query.models';
 import { hidePageSizePixelValue } from '@shared/models/constants';
 import { ResizeObserver } from '@juggle/resize-observer';
+import { FormBuilder } from '@angular/forms';
 
 
 @Component({
@@ -178,16 +179,7 @@ export class AttributeTableComponent extends PageComponent implements AfterViewI
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
 
-  private _textSearch: string | null;
-
-  get textSearch(): string | null {
-    return this._textSearch;
-  }
-
-  set textSearch(value: string | null) {
-    this.pageLink.textSearch = value !== null ? value.trim() : null;
-    this._textSearch = value;
-  }
+  textSearch = this.fb.control('', {nonNullable: true});
 
   constructor(protected store: Store<AppState>,
               private attributeService: AttributeService,
@@ -203,7 +195,8 @@ export class AttributeTableComponent extends PageComponent implements AfterViewI
               private widgetService: WidgetService,
               private zone: NgZone,
               private cd: ChangeDetectorRef,
-              private elementRef: ElementRef) {
+              private elementRef: ElementRef,
+              private fb: FormBuilder) {
     super(store);
     this.dirtyValue = !this.activeValue;
     const sortOrder: SortOrder = { property: 'key', direction: Direction.ASC };
@@ -236,20 +229,16 @@ export class AttributeTableComponent extends PageComponent implements AfterViewI
   }
 
   ngAfterViewInit() {
-
-    fromEvent(this.searchInputField.nativeElement, 'keyup')
-      .pipe(
-        debounceTime(150),
-        map(() => this.textSearch),
-        startWith(''),
-        distinctUntilChanged((a: string, b: string) => a.trim() === b.trim()),
-        skip(1),
-        tap(() => {
-          this.paginator.pageIndex = 0;
-          this.updateData();
-        })
-      )
-      .subscribe();
+    this.textSearch.valueChanges.pipe(
+      debounceTime(150),
+      startWith(''),
+      distinctUntilChanged((a: string, b: string) => a.trim() === b.trim()),
+      skip(1)
+    ).subscribe((value) => {
+      this.paginator.pageIndex = 0;
+      this.pageLink.textSearch = value.trim();
+      this.updateData();
+    });
 
     this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
 
@@ -275,7 +264,6 @@ export class AttributeTableComponent extends PageComponent implements AfterViewI
 
   enterFilterMode() {
     this.textSearchMode = true;
-    this.textSearch = '';
     setTimeout(() => {
       this.searchInputField.nativeElement.focus();
       this.searchInputField.nativeElement.setSelectionRange(0, 0);
@@ -284,9 +272,7 @@ export class AttributeTableComponent extends PageComponent implements AfterViewI
 
   exitFilterMode() {
     this.textSearchMode = false;
-    this.textSearch = null;
-    this.paginator.pageIndex = 0;
-    this.updateData();
+    this.textSearch.reset();
   }
 
   resetSortAndFilter(update: boolean = true) {
@@ -300,9 +286,9 @@ export class AttributeTableComponent extends PageComponent implements AfterViewI
     }
     this.mode = 'default';
     this.textSearchMode = false;
+    this.textSearch.reset('', {emitEvent: false});
     this.selectedWidgetsBundleAlias = null;
     this.attributeScope = this.defaultAttributeScope;
-    this.textSearch = null;
     if (this.viewsInited) {
       this.paginator.pageIndex = 0;
       const sortable = this.sort.sortables.get('key');

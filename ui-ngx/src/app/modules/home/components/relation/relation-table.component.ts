@@ -35,8 +35,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { DialogService } from '@core/services/dialog.service';
 import { EntityRelationService } from '@core/http/entity-relation.service';
 import { Direction, SortOrder } from '@shared/models/page/sort-order';
-import { forkJoin, fromEvent, merge, Observable } from 'rxjs';
-import { debounceTime, distinctUntilChanged, map, skip, startWith, tap } from 'rxjs/operators';
+import { forkJoin, merge, Observable } from 'rxjs';
+import { debounceTime, distinctUntilChanged, skip, startWith, tap } from 'rxjs/operators';
 import {
   EntityRelation,
   EntityRelationInfo,
@@ -49,6 +49,7 @@ import { RelationsDatasource } from '../../models/datasource/relation-datasource
 import { RelationDialogComponent, RelationDialogData } from '@home/components/relation/relation-dialog.component';
 import { hidePageSizePixelValue } from '@shared/models/constants';
 import { ResizeObserver } from '@juggle/resize-observer';
+import { FormBuilder } from '@angular/forms';
 
 @Component({
   selector: 'tb-relation-table',
@@ -110,16 +111,7 @@ export class RelationTableComponent extends PageComponent implements AfterViewIn
   @ViewChild(MatPaginator) paginator: MatPaginator;
   @ViewChild(MatSort) sort: MatSort;
 
-  private _textSearch: string | null;
-
-  get textSearch(): string | null {
-    return this._textSearch;
-  }
-
-  set textSearch(value: string | null) {
-    this.pageLink.textSearch = value !== null ? value.trim() : null;
-    this._textSearch = value;
-  }
+  textSearch = this.fb.control('', {nonNullable: true});
 
   constructor(protected store: Store<AppState>,
               private entityRelationService: EntityRelationService,
@@ -127,7 +119,8 @@ export class RelationTableComponent extends PageComponent implements AfterViewIn
               public dialog: MatDialog,
               private dialogService: DialogService,
               private cd: ChangeDetectorRef,
-              private elementRef: ElementRef) {
+              private elementRef: ElementRef,
+              private fb: FormBuilder) {
     super(store);
     this.dirtyValue = !this.activeValue;
     const sortOrder: SortOrder = { property: 'type', direction: Direction.ASC };
@@ -170,20 +163,16 @@ export class RelationTableComponent extends PageComponent implements AfterViewIn
   }
 
   ngAfterViewInit() {
-
-    fromEvent(this.searchInputField.nativeElement, 'keyup')
-      .pipe(
-        debounceTime(150),
-        map(() => this.textSearch),
-        startWith(''),
-        distinctUntilChanged((a: string, b: string) => a.trim() === b.trim()),
-        skip(1),
-        tap(() => {
-          this.paginator.pageIndex = 0;
-          this.updateData();
-        })
-      )
-      .subscribe();
+    this.textSearch.valueChanges.pipe(
+      debounceTime(150),
+      startWith(''),
+      distinctUntilChanged((a: string, b: string) => a.trim() === b.trim()),
+      skip(1)
+    ).subscribe((value) => {
+      this.paginator.pageIndex = 0;
+      this.pageLink.textSearch = value.trim();
+      this.updateData();
+    });
 
     this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
 
@@ -209,7 +198,6 @@ export class RelationTableComponent extends PageComponent implements AfterViewIn
 
   enterFilterMode() {
     this.textSearchMode = true;
-    this.textSearch = '';
     setTimeout(() => {
       this.searchInputField.nativeElement.focus();
       this.searchInputField.nativeElement.setSelectionRange(0, 0);
@@ -218,15 +206,13 @@ export class RelationTableComponent extends PageComponent implements AfterViewIn
 
   exitFilterMode() {
     this.textSearchMode = false;
-    this.textSearch = null;
-    this.paginator.pageIndex = 0;
-    this.updateData();
+    this.textSearch.reset();
   }
 
   resetSortAndFilter(update: boolean = true) {
     this.direction = EntitySearchDirection.FROM;
     this.updateColumns();
-    this.textSearch = null;
+    this.textSearch.reset('', {emitEvent: false});
     this.paginator.pageIndex = 0;
     const sortable = this.sort.sortables.get('type');
     this.sort.active = sortable.id;

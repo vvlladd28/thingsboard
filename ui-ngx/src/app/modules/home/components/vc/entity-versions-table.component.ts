@@ -33,7 +33,7 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
 import { EntityId, entityIdEquals } from '@shared/models/id/entity-id';
 import { CollectionViewer, DataSource } from '@angular/cdk/collections';
-import { BehaviorSubject, fromEvent, merge, Observable, of, ReplaySubject } from 'rxjs';
+import { BehaviorSubject, merge, Observable, of, ReplaySubject } from 'rxjs';
 import { emptyPageData, PageData } from '@shared/models/page/page-data';
 import { PageLink } from '@shared/models/page/page-link';
 import { catchError, debounceTime, distinctUntilChanged, map, skip, startWith, tap } from 'rxjs/operators';
@@ -55,6 +55,7 @@ import { ComplexVersionCreateComponent } from '@home/components/vc/complex-versi
 import { ComplexVersionLoadComponent } from '@home/components/vc/complex-version-load.component';
 import { TbPopoverComponent } from '@shared/components/popover.component';
 import { AdminService } from '@core/http/admin.service';
+import { FormBuilder } from '@angular/forms';
 
 @Component({
   selector: 'tb-entity-versions-table',
@@ -92,16 +93,7 @@ export class EntityVersionsTableComponent extends PageComponent implements OnIni
 
   private componentResize$: ResizeObserver;
 
-  private _textSearch: string | null;
-
-  get textSearch(): string | null {
-    return this._textSearch;
-  }
-
-  set textSearch(value: string | null) {
-    this.pageLink.textSearch = value !== null ? value.trim() : null;
-    this._textSearch = value;
-  }
+  textSearch = this.fb.control('', {nonNullable: true});
 
   @Input()
   set active(active: boolean) {
@@ -148,7 +140,8 @@ export class EntityVersionsTableComponent extends PageComponent implements OnIni
               private renderer: Renderer2,
               private cd: ChangeDetectorRef,
               private viewContainerRef: ViewContainerRef,
-              private elementRef: ElementRef) {
+              private elementRef: ElementRef,
+              private fb: FormBuilder) {
     super(store);
     this.dirtyValue = !this.activeValue;
     const sortOrder: SortOrder = { property: 'timestamp', direction: Direction.DESC };
@@ -185,19 +178,16 @@ export class EntityVersionsTableComponent extends PageComponent implements OnIni
   }
 
   ngAfterViewInit() {
-    fromEvent(this.searchInputField.nativeElement, 'keyup')
-      .pipe(
-        debounceTime(400),
-        map(() => this.textSearch),
-        startWith(''),
-        distinctUntilChanged((a: string, b: string) => a.trim() === b.trim()),
-        skip(1),
-        tap(() => {
-          this.paginator.pageIndex = 0;
-          this.updateData();
-        })
-      )
-      .subscribe();
+    this.textSearch.valueChanges.pipe(
+      debounceTime(400),
+      startWith(''),
+      distinctUntilChanged((a: string, b: string) => a.trim() === b.trim()),
+      skip(1)
+    ).subscribe((value) => {
+      this.paginator.pageIndex = 0;
+      this.pageLink.textSearch = value.trim();
+      this.updateData();
+    });
 
     this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
     merge(this.sort.sortChange, this.paginator.page)
@@ -355,7 +345,6 @@ export class EntityVersionsTableComponent extends PageComponent implements OnIni
 
   enterFilterMode() {
     this.textSearchMode = true;
-    this.textSearch = '';
     setTimeout(() => {
       this.searchInputField.nativeElement.focus();
       this.searchInputField.nativeElement.setSelectionRange(0, 0);
@@ -364,9 +353,7 @@ export class EntityVersionsTableComponent extends PageComponent implements OnIni
 
   exitFilterMode() {
     this.textSearchMode = false;
-    this.textSearch = null;
-    this.paginator.pageIndex = 0;
-    this.updateData();
+    this.textSearch.reset();
   }
 
   private initFromDefaultBranch() {
@@ -390,7 +377,7 @@ export class EntityVersionsTableComponent extends PageComponent implements OnIni
 
   private resetSortAndFilter(update: boolean) {
     this.textSearchMode = false;
-    this.textSearch = null;
+    this.textSearch.reset('', {emitEvent: false});
     if (this.viewsInited) {
       this.paginator.pageIndex = 0;
       const sortable = this.sort.sortables.get('timestamp');

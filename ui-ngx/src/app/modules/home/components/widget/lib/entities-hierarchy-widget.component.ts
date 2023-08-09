@@ -23,8 +23,7 @@ import { DatasourceData, DatasourceType, WidgetConfig, widgetType } from '@share
 import { IWidgetSubscription, WidgetSubscriptionOptions } from '@core/api/widget-api.models';
 import { UtilsService } from '@core/services/utils.service';
 import cssjs from '@core/css/css';
-import { fromEvent } from 'rxjs';
-import { debounceTime, distinctUntilChanged, map, skip, startWith, tap } from 'rxjs/operators';
+import { debounceTime, distinctUntilChanged, skip, startWith } from 'rxjs/operators';
 import { constructTableCssString } from '@home/components/widget/lib/table-widget.models';
 import { Overlay } from '@angular/cdk/overlay';
 import {
@@ -36,7 +35,7 @@ import {
   NodesInsertedCallback
 } from '@shared/components/nav-tree.component';
 import { EntityType } from '@shared/models/entity-type.models';
-import { deepClone, hashCode } from '@core/utils';
+import { deepClone, hashCode, isDefinedAndNotNull, isEmptyStr } from '@core/utils';
 import {
   defaultNodeIconFunction,
   defaultNodeOpenedFunction,
@@ -60,6 +59,7 @@ import {
 import { EntityRelationsQuery } from '@shared/models/relation.models';
 import { AliasFilterType, RelationsQueryFilter } from '@shared/models/alias.models';
 import { EntityFilter } from '@shared/models/query/query.models';
+import { FormBuilder } from '@angular/forms';
 
 @Component({
   selector: 'tb-entities-hierarchy-widget',
@@ -76,7 +76,6 @@ export class EntitiesHierarchyWidgetComponent extends PageComponent implements O
   public toastTargetId = 'entities-hierarchy-' + this.utils.guid();
 
   public textSearchMode = false;
-  public textSearch = null;
 
   public nodeEditCallbacks: NavTreeEditCallbacks = {};
 
@@ -106,11 +105,14 @@ export class EntitiesHierarchyWidgetComponent extends PageComponent implements O
     }
   };
 
+  textSearch = this.fb.control('', {nonNullable: true});
+
   constructor(protected store: Store<AppState>,
               private elementRef: ElementRef,
               private overlay: Overlay,
               private viewContainerRef: ViewContainerRef,
-              private utils: UtilsService) {
+              private utils: UtilsService,
+              private fb: FormBuilder) {
     super(store);
   }
 
@@ -125,18 +127,18 @@ export class EntitiesHierarchyWidgetComponent extends PageComponent implements O
   }
 
   ngAfterViewInit(): void {
-    fromEvent(this.searchInputField.nativeElement, 'keyup')
-      .pipe(
-        debounceTime(150),
-        map(() => this.textSearch),
-        startWith(''),
-        distinctUntilChanged((a: string, b: string) => a.trim() === b.trim()),
-        skip(1),
-        tap(() => {
-          this.updateSearchNodes();
-        })
-      )
-      .subscribe();
+    this.textSearch.valueChanges.pipe(
+      debounceTime(150),
+      startWith(''),
+      distinctUntilChanged((a: string, b: string) => a.trim() === b.trim()),
+      skip(1)
+    ).subscribe((value) => {
+      if (isDefinedAndNotNull(value) && !isEmptyStr(value)) {
+        this.nodeEditCallbacks.search(value.trim());
+      } else {
+        this.nodeEditCallbacks.clearSearch();
+      }
+    });
   }
 
   public onDataUpdated() {
@@ -193,7 +195,6 @@ export class EntitiesHierarchyWidgetComponent extends PageComponent implements O
 
   private enterFilterMode() {
     this.textSearchMode = true;
-    this.textSearch = '';
     this.ctx.hideTitlePanel = true;
     this.ctx.detectChanges(true);
     setTimeout(() => {
@@ -204,18 +205,10 @@ export class EntitiesHierarchyWidgetComponent extends PageComponent implements O
 
   exitFilterMode() {
     this.textSearchMode = false;
-    this.textSearch = null;
-    this.updateSearchNodes();
+    this.textSearch.reset();
+    this.nodeEditCallbacks.clearSearch();
     this.ctx.hideTitlePanel = false;
     this.ctx.detectChanges(true);
-  }
-
-  private updateSearchNodes() {
-    if (this.textSearch != null) {
-      this.nodeEditCallbacks.search(this.textSearch.trim());
-    } else {
-      this.nodeEditCallbacks.clearSearch();
-    }
   }
 
   private updateNodeData(subscriptionData: Array<DatasourceData>) {

@@ -54,7 +54,7 @@ import {
 import cssjs from '@core/css/css';
 import { CollectionViewer, DataSource } from '@angular/cdk/collections';
 import { DataKeyType } from '@shared/models/telemetry/telemetry.models';
-import { BehaviorSubject, fromEvent, merge, Observable } from 'rxjs';
+import { BehaviorSubject, merge, Observable } from 'rxjs';
 import { emptyPageData, PageData } from '@shared/models/page/page-data';
 import { EntityId } from '@shared/models/id/entity-id';
 import { entityTypeTranslations } from '@shared/models/entity-type.models';
@@ -113,6 +113,7 @@ import { coerceBooleanProperty } from '@angular/cdk/coercion';
 import { ResizeObserver } from '@juggle/resize-observer';
 import { hidePageSizePixelValue } from '@shared/models/constants';
 import { AggregationType } from '@shared/models/time/time.models';
+import { FormBuilder } from '@angular/forms';
 
 interface EntitiesTableWidgetSettings extends TableWidgetSettings {
   entitiesTitle: string;
@@ -195,16 +196,7 @@ export class EntitiesTableWidgetComponent extends PageComponent implements OnIni
     }
   };
 
-  private _textSearch: string | null;
-
-  get textSearch(): string | null {
-    return this._textSearch;
-  }
-
-  set textSearch(value: string | null) {
-    this.pageLink.textSearch = value !== null ? value.trim() : null;
-    this._textSearch = value;
-  }
+  textSearch = this.fb.control('', {nonNullable: true});
 
   constructor(protected store: Store<AppState>,
               private elementRef: ElementRef,
@@ -215,7 +207,8 @@ export class EntitiesTableWidgetComponent extends PageComponent implements OnIni
               private datePipe: DatePipe,
               private translate: TranslateService,
               private domSanitizer: DomSanitizer,
-              private cd: ChangeDetectorRef) {
+              private cd: ChangeDetectorRef,
+              private fb: FormBuilder) {
     super(store);
     this.pageLink = {
       page: 0,
@@ -252,21 +245,18 @@ export class EntitiesTableWidgetComponent extends PageComponent implements OnIni
   }
 
   ngAfterViewInit(): void {
-    fromEvent(this.searchInputField.nativeElement, 'keyup')
-      .pipe(
-        debounceTime(150),
-        map(() => this.textSearch),
-        startWith(''),
-        distinctUntilChanged((a: string, b: string) => a.trim() === b.trim()),
-        skip(1),
-        tap(() => {
-          if (this.displayPagination) {
-            this.paginator.pageIndex = 0;
-          }
-          this.updateData();
-        })
-      )
-      .subscribe();
+    this.textSearch.valueChanges.pipe(
+      debounceTime(150),
+      startWith(''),
+      distinctUntilChanged((a: string, b: string) => a.trim() === b.trim()),
+      skip(1)
+    ).subscribe((value) => {
+      if (this.displayPagination) {
+        this.paginator.pageIndex = 0;
+      }
+      this.pageLink.textSearch = value.trim();
+      this.updateData();
+    });
 
     if (this.displayPagination) {
       this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
@@ -548,7 +538,6 @@ export class EntitiesTableWidgetComponent extends PageComponent implements OnIni
 
   private enterFilterMode() {
     this.textSearchMode = true;
-    this.textSearch = '';
     this.ctx.hideTitlePanel = true;
     this.ctx.detectChanges(true);
     setTimeout(() => {
@@ -559,11 +548,7 @@ export class EntitiesTableWidgetComponent extends PageComponent implements OnIni
 
   exitFilterMode() {
     this.textSearchMode = false;
-    this.textSearch = null;
-    if (this.displayPagination) {
-      this.paginator.pageIndex = 0;
-    }
-    this.updateData();
+    this.textSearch.reset();
     this.ctx.hideTitlePanel = false;
     this.ctx.detectChanges(true);
   }

@@ -51,7 +51,7 @@ import cssjs from '@core/css/css';
 import { sortItems } from '@shared/models/page/page-link';
 import { Direction } from '@shared/models/page/sort-order';
 import { CollectionViewer, DataSource, SelectionModel } from '@angular/cdk/collections';
-import { BehaviorSubject, forkJoin, fromEvent, merge, Observable, Subscription } from 'rxjs';
+import { BehaviorSubject, forkJoin, merge, Observable, Subscription } from 'rxjs';
 import { emptyPageData, PageData } from '@shared/models/page/page-data';
 import { debounceTime, distinctUntilChanged, map, skip, startWith, take, tap } from 'rxjs/operators';
 import { MatPaginator } from '@angular/material/paginator';
@@ -131,6 +131,7 @@ import {
   AlarmFilterConfigData
 } from '@home/components/alarm/alarm-filter-config.component';
 import { getCurrentAuthUser } from '@core/auth/auth.selectors';
+import { FormBuilder } from '@angular/forms';
 
 interface AlarmsTableWidgetSettings extends TableWidgetSettings {
   alarmsTitle: string;
@@ -242,16 +243,7 @@ export class AlarmsTableWidgetComponent extends PageComponent implements OnInit,
     icon: 'filter_list'
   };
 
-  private _textSearch: string | null;
-
-  get textSearch(): string | null {
-    return this._textSearch;
-  }
-
-  set textSearch(value: string | null) {
-    this.pageLink.textSearch = value !== null ? value.trim() : null;
-    this._textSearch = value;
-  }
+  textSearch = this.fb.control('', {nonNullable: true});
 
   constructor(protected store: Store<AppState>,
               private elementRef: ElementRef,
@@ -266,7 +258,8 @@ export class AlarmsTableWidgetComponent extends PageComponent implements OnInit,
               private dialogService: DialogService,
               private entityService: EntityService,
               private alarmService: AlarmService,
-              private cd: ChangeDetectorRef) {
+              private cd: ChangeDetectorRef,
+              private fb: FormBuilder) {
     super(store);
     this.pageLink = {
       page: 0,
@@ -310,19 +303,16 @@ export class AlarmsTableWidgetComponent extends PageComponent implements OnInit,
   }
 
   ngAfterViewInit(): void {
-    fromEvent(this.searchInputField.nativeElement, 'keyup')
-      .pipe(
-        debounceTime(150),
-        map(() => this.textSearch),
-        startWith(''),
-        distinctUntilChanged((a: string, b: string) => a.trim() === b.trim()),
-        skip(1),
-        tap(() => {
-          this.resetPageIndex();
-          this.updateData();
-        })
-      )
-      .subscribe();
+    this.textSearch.valueChanges.pipe(
+      debounceTime(150),
+      startWith(''),
+      distinctUntilChanged((a: string, b: string) => a.trim() === b.trim()),
+      skip(1)
+    ).subscribe((value) => {
+      this.resetPageIndex();
+      this.pageLink.textSearch = value.trim();
+      this.updateData();
+    });
 
     if (this.displayPagination) {
       this.sort.sortChange.subscribe(() => this.paginator.pageIndex = 0);
@@ -658,7 +648,6 @@ export class AlarmsTableWidgetComponent extends PageComponent implements OnInit,
 
   private enterFilterMode() {
     this.textSearchMode = true;
-    this.textSearch = '';
     this.ctx.hideTitlePanel = true;
     this.ctx.detectChanges(true);
     setTimeout(() => {
@@ -669,9 +658,7 @@ export class AlarmsTableWidgetComponent extends PageComponent implements OnInit,
 
   exitFilterMode() {
     this.textSearchMode = false;
-    this.textSearch = null;
-    this.resetPageIndex();
-    this.updateData();
+    this.textSearch.reset();
     this.ctx.hideTitlePanel = false;
     this.ctx.detectChanges(true);
   }
