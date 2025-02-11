@@ -300,7 +300,9 @@ export class WidgetService {
   }
 
   public registerBasicWidgetConfigComponents(module: any) {
-    Object.assign(this.basicWidgetSettingsComponentsMap, this.resourcesService.extractComponentsFromModule<IBasicWidgetConfigComponent>(module, BasicWidgetConfigComponent));
+    Object.assign(this.basicWidgetSettingsComponentsMap, this.resourcesService
+      .extractComponentsFromModule<IBasicWidgetConfigComponent>(module,
+        (com) => com.prototype instanceof BasicWidgetConfigComponent));
   }
 
   public getBasicWidgetSettingsComponentBySelector(selector: string): Type<IBasicWidgetConfigComponent> {
@@ -312,7 +314,9 @@ export class WidgetService {
   }
 
   public registerWidgetSettingsComponents(module: any) {
-    Object.assign(this.widgetSettingsComponentsMap, this.resourcesService.extractComponentsFromModule<IWidgetSettingsComponent>(module, WidgetSettingsComponent));
+    Object.assign(this.widgetSettingsComponentsMap, this.resourcesService
+      .extractComponentsFromModule<IWidgetSettingsComponent>(module,
+        (com) => com.prototype instanceof WidgetSettingsComponent));
   }
 
   public getWidgetSettingsComponentTypeBySelector(selector: string): Type<IWidgetSettingsComponent> {
