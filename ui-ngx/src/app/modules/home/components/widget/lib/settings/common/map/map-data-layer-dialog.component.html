@@ -292,6 +292,35 @@
         </mat-slide-toggle>
       </div>
     </div>
+    <div class="tb-form-panel" formGroupName="createdEntity">
+      <mat-slide-toggle class="mat-slide" formControlName="enable">
+        Add entity to map and create
+      </mat-slide-toggle>
+      @if (dataLayerFormGroup.get('createdEntity.enable').value) {
+        <div class="tb-form-row space-between column-lt-md">
+          <div>Label</div>
+          <mat-form-field class="flex-1" style="margin-left: 9px" appearance="outline" subscriptSizing="dynamic">
+            <input matInput placeholder="{{ 'widget-config.set' | translate }}" formControlName="label">
+          </mat-form-field>
+        </div>
+        <div class="tb-form-row space-between column-lt-md" *ngIf="dataLayerType === 'polygons'">
+          <div>Polygon type</div>
+          <mat-form-field class="flex-1" style="margin-left: 9px" appearance="outline" subscriptSizing="dynamic">
+            <mat-select formControlName="polygonType">
+              <mat-option value="polygon">Polygon</mat-option>
+              <mat-option value="rectangle">Rectangle</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+        <tb-widget-action
+          withName="false"
+          [callbacks]="context.callbacks"
+          [widgetType]="widgetType.latest"
+          formControlName="action"
+          [enableActionTypes]="[WidgetActionType.doNothing, WidgetActionType.custom, WidgetActionType.customPretty]">
+        </tb-widget-action>
+      }
+    </div>
     <tb-marker-clustering-settings
       *ngIf="dataLayerType === 'markers'"
       formControlName="markerClustering">

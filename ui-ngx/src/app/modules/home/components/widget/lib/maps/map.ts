@@ -41,7 +41,7 @@ import {
   UnplacedMapDataItem,
 } from '@home/components/widget/lib/maps/data-layer/map-data-layer';
 import { IWidgetSubscription, WidgetSubscriptionOptions } from '@core/api/widget-api.models';
-import { FormattedData, WidgetAction, WidgetActionDescriptor, widgetType } from '@shared/models/widget.models';
+import { FormattedData, WidgetAction, WidgetActionType, widgetType } from '@shared/models/widget.models';
 import { EntityDataPageLink } from '@shared/models/query/query.models';
 import { CustomTranslatePipe } from '@shared/pipe/custom-translate.pipe';
 import { TbMarkersDataLayer } from '@home/components/widget/lib/maps/data-layer/markers-data-layer';
@@ -300,20 +300,7 @@ export abstract class TbMap<S extends BaseMapSettings> {
            }
          });
          this.addMarkerButton.setDisabled(true);
-         createColorMarkerShapeURI(this.getCtx().$injector.get(MatIconRegistry), this.getCtx().$injector.get(DomSanitizer), MarkerShape.markerShape1, tinycolor('rgba(255,255,255,0.75)')).subscribe(
-           ((iconUrl) => {
-             const icon = L.icon({
-               iconUrl,
-               iconSize: [40, 40],
-               iconAnchor: [20, 40]
-             });
-             this.map.pm.setGlobalOptions({
-               markerStyle: {
-                 icon
-               }
-             });
-           })
-         );
+         this.setPlaceMarkerStyle();
        }
        this.addPolygonDataLayers = addSupportedDataLayers.filter(dl => dl.dataLayerType() === MapDataLayerType.polygon);
        if (this.addPolygonDataLayers.length) {
@@ -349,24 +336,6 @@ export abstract class TbMap<S extends BaseMapSettings> {
          this.addCircleButton.setDisabled(true);
        }
      }
-  }
-
-  private setupCustomActions() {
-    this.customActionsToolbar = L.TB.topToolbar({
-      mapElement: $(this.mapElement)
-    });
-
-    /*const customButton = this.customActionsToolbar.toolbarButton({
-      title: 'Super button',
-      icon: 'add'
-    });
-    this.customActionsToolbar.toolbarButton({
-      title: 'Super button 2',
-      icon: 'add'
-    });
-    customButton.onClick(e => {
-      console.log("Called!");
-    });*/
   }
 
   private placeMarker(e: MouseEvent, button: L.TB.ToolbarButton): void {
@@ -507,6 +476,166 @@ export abstract class TbMap<S extends BaseMapSettings> {
     }
   }
 
+  private setupCustomActions() {
+    this.customActionsToolbar = L.TB.topToolbar({
+      mapElement: $(this.mapElement),
+      iconRegistry: this.ctx.$injector.get(MatIconRegistry)
+    });
+
+    const customActionDataLayers = this.dataLayers.filter(dl => dl.isCustomAction());
+
+    if (customActionDataLayers.length) {
+      if (customActionDataLayers.some(dataLayer => dataLayer.dataLayerType() === MapDataLayerType.marker)) {
+        this.setPlaceMarkerStyle();
+      }
+
+      customActionDataLayers.forEach(dataLayer => {
+        const actionButtonConfig = dataLayer.getCustomAction();
+        const actionButton = this.customActionsToolbar.toolbarButton(actionButtonConfig);
+        if (actionButtonConfig.action.type === WidgetActionType.doNothing) {
+          return;
+        }
+        switch (dataLayer.dataLayerType()) {
+          case MapDataLayerType.marker:
+            actionButton.onClick((e, button) => this.createMarker(e, button, dataLayer));
+            break;
+          case MapDataLayerType.polygon:
+            if (actionButtonConfig.polygonType === 'rectangle') {
+              actionButton.onClick((e, button) => this.createRectangle(e, button, dataLayer));
+            } else {
+              actionButton.onClick((e, button) => this.createPolygon(e, button, dataLayer));
+            }
+            break;
+          case MapDataLayerType.circle:
+            actionButton.onClick((e, button) => this.createCircle(e, button, dataLayer));
+            break;
+        }
+
+      });
+    }
+
+    // const customButton = this.customActionsToolbar.toolbarButton({
+    //   title: 'Super button',
+    //   icon: 'add'
+    // });
+    // this.customActionsToolbar.toolbarButton({
+    //   title: 'Super button 2',
+    //   icon: 'mdi:account-circle'
+    // });
+    // customButton.onClick(e => {
+    //   console.log("Called!");
+    // });
+  }
+
+  private createMarker(e: MouseEvent, button: L.TB.TopToolbarButton, dataLayer: TbMapDataLayer) {
+    this.createItem(e, button, dataLayer, () => {
+        this.map.pm.setLang('en', {
+          tooltips: {
+            placeMarker: this.ctx.translate.instant('widgets.maps.data-layer.marker.create-marker-hint')
+          }
+        }, 'en');
+        this.map.pm.enableDraw('Marker');
+        // @ts-ignore
+        L.DomUtil.addClass(this.map.pm.Draw.Marker._hintMarker.getTooltip()._container, 'tb-place-item-label');
+      }
+    );
+  }
+
+  private createRectangle(e: MouseEvent, button: L.TB.TopToolbarButton, dataLayer: TbMapDataLayer): void {
+    this.createItem(e, button, dataLayer,
+      () => {
+        this.map.pm.setLang('en', {
+          tooltips: {
+            firstVertex: this.ctx.translate.instant('widgets.maps.data-layer.polygon.create-rectangle-place-first-point-hint'),
+            finishRect: this.ctx.translate.instant('widgets.maps.data-layer.polygon.create-finish-rectangle-hint')
+          }
+        }, 'en');
+        this.map.pm.enableDraw('Rectangle');
+        // @ts-ignore
+        L.DomUtil.addClass(this.map.pm.Draw.Rectangle._hintMarker.getTooltip()._container, 'tb-place-item-label');
+      }
+    );
+  }
+
+  private createPolygon(e: MouseEvent, button: L.TB.TopToolbarButton, dataLayer: TbMapDataLayer): void {
+    this.createItem(e, button, dataLayer,
+      () => {
+        this.map.pm.setLang('en', {
+          tooltips: {
+            firstVertex: this.ctx.translate.instant('widgets.maps.data-layer.polygon.create-polygon-place-first-point-hint'),
+            continueLine: this.ctx.translate.instant('widgets.maps.data-layer.polygon.create-continue-polygon-hint'),
+            finishPoly: this.ctx.translate.instant('widgets.maps.data-layer.polygon.create-finish-polygon-hint')
+          }
+        }, 'en');
+        this.map.pm.enableDraw('Polygon');
+        // @ts-ignore
+        L.DomUtil.addClass(this.map.pm.Draw.Polygon._hintMarker.getTooltip()._container, 'tb-place-item-label');
+      }
+    );
+  }
+
+  private createCircle(e: MouseEvent, button: L.TB.TopToolbarButton, dataLayer: TbMapDataLayer): void {
+    this.createItem(e, button, dataLayer,
+      () => {
+        this.map.pm.setLang('en', {
+          tooltips: {
+            startCircle: this.ctx.translate.instant('widgets.maps.data-layer.circle.create-circle-center-hint'),
+            finishCircle: this.ctx.translate.instant('widgets.maps.data-layer.circle.create-finish-circle-hint'),
+          }
+        }, 'en');
+        this.map.pm.enableDraw('Circle');
+        // @ts-ignore
+        L.DomUtil.addClass(this.map.pm.Draw.Circle._hintMarker.getTooltip()._container, 'tb-place-item-label');
+      }
+    );
+  }
+
+  private createItem(e: MouseEvent, button: L.TB.TopToolbarButton, dataLayer: TbMapDataLayer, prepareDrawMode: () => void) {
+    if (this.isPlacingItem) {
+      return;
+    }
+    this.updatePlaceItemState(button);
+
+    const finishAdd = () => {
+      this.map.off('pm:create');
+      this.map.pm.disableDraw();
+      this.dataLayers.forEach(dl => dl.enableEditMode());
+      this.updatePlaceItemState();
+      this.editToolbar.close();
+    };
+
+    this.map.once('pm:create', (e) => {
+      // @ts-ignore
+      const dataKeys = dataLayer.convertLayerToDataKeys(e.layer);
+
+      this.ctx.actionsApi.handleWidgetAction(e as any, dataLayer.getCustomAction().action, null, null, {
+        dataKeys,
+        entityAliasId: dataLayer.getDatasource().entityAliasId,
+        deviceId: dataLayer.getDatasource().deviceId
+      });
+
+      // entity.dataLayer.placeItem(entity, e.layer);
+      // @ts-ignore
+      e.layer._pmTempLayer = true;
+      e.layer.remove();
+      finishAdd();
+    });
+
+    prepareDrawMode();
+
+    this.dataLayers.forEach(dl => dl.disableEditMode());
+
+    this.editToolbar.open([
+      {
+        id: 'cancel',
+        iconClass: 'tb-close',
+        title: this.ctx.translate.instant('action.cancel'),
+        showText: true,
+        click: finishAdd
+      }
+    ], false);
+  }
+
   private updatePlaceItemState(addButton?: L.TB.ToolbarButton): void {
     if (addButton) {
       this.deselectItem(false, true);
@@ -624,6 +753,7 @@ export abstract class TbMap<S extends BaseMapSettings> {
       if (this.addCircleButton && this.addCircleButton !== this.currentAddButton) {
         this.addCircleButton.setDisabled(true);
       }
+      this.customActionsToolbar.setDisabled(true);
     } else {
       if (this.addMarkerButton) {
         this.addMarkerButton.setDisabled(!this.addMarkerDataLayers.some(dl => dl.isEnabled() && dl.hasUnplacedItems()));
@@ -637,7 +767,25 @@ export abstract class TbMap<S extends BaseMapSettings> {
       if (this.addCircleButton) {
         this.addCircleButton.setDisabled(!this.addCircleDataLayers.some(dl => dl.isEnabled() && dl.hasUnplacedItems()));
       }
+      this.customActionsToolbar.setDisabled(false);
     }
+  }
+
+  private setPlaceMarkerStyle() {
+    createColorMarkerShapeURI(this.getCtx().$injector.get(MatIconRegistry), this.getCtx().$injector.get(DomSanitizer), MarkerShape.markerShape1, tinycolor('rgba(255,255,255,0.75)')).subscribe(
+      ((iconUrl) => {
+        const icon = L.icon({
+          iconUrl,
+          iconSize: [40, 40],
+          iconAnchor: [20, 40]
+        });
+        this.map.pm.setGlobalOptions({
+          markerStyle: {
+            icon
+          }
+        });
+      })
+    );
   }
 
   protected abstract defaultSettings(): S;

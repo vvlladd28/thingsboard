@@ -15,6 +15,7 @@
 ///
 
 import {
+  DataKeyValuePair,
   DataLayerColorSettings,
   DataLayerColorType,
   DataLayerEditAction,
@@ -29,7 +30,7 @@ import {
   TbMapDatasource
 } from '@home/components/widget/lib/maps/models/map.models';
 import { TbMap } from '@home/components/widget/lib/maps/map';
-import { FormattedData, WidgetActionType } from '@shared/models/widget.models';
+import { DatasourceType, FormattedData, WidgetAction, WidgetActionType } from '@shared/models/widget.models';
 import { forkJoin, Observable, of } from 'rxjs';
 import {
   createLabelFromPattern,
@@ -419,6 +420,8 @@ export abstract class TbMapDataLayer<S extends MapDataLayerSettings = MapDataLay
   public dataLayerLabelProcessor: DataLayerPatternProcessor;
   public dataLayerTooltipProcessor: DataLayerPatternProcessor;
 
+  protected customAction: L.TB.TopToolbarButtonOptions & {action: WidgetAction; polygonType?: 'polygon'|'rectangle'} = null;
+
   protected constructor(protected map: TbMap<any>,
                         inputSettings: S) {
     this.settings = mergeDeepIgnoreArray({} as S, this.defaultBaseSettings(map) as S, inputSettings);
@@ -438,6 +441,17 @@ export abstract class TbMapDataLayer<S extends MapDataLayerSettings = MapDataLay
       this.selectable = this.removeEnabled || this.editEnabled;
       this.hoverable = this.selectable || this.dragEnabled;
       this.snappable = this.settings.edit.snappable;
+    }
+
+    if (this.settings.createdEntity?.enable && this.settings.dsType === DatasourceType.entity) {
+      this.customAction = {
+        title: this.settings.createdEntity.label,
+        icon: this.settings.createdEntity.icon || 'add',
+        action: this.settings.createdEntity.action
+      };
+      if(this.dataLayerType() === MapDataLayerType.polygon) {
+        this.customAction.polygonType = this.settings.createdEntity.polygonType
+      }
     }
 
     this.dataLayerContainer = this.createDataLayerContainer();
@@ -510,6 +524,14 @@ export abstract class TbMapDataLayer<S extends MapDataLayerSettings = MapDataLay
 
   public isSnappable(): boolean {
     return this.snappable;
+  }
+
+  public isCustomAction(): boolean {
+    return !!this.customAction;
+  }
+
+  public getCustomAction(): L.TB.TopToolbarButtonOptions & {action: WidgetAction; polygonType?: 'polygon'|'rectangle'} {
+    return this.customAction;
   }
 
   public getGroups(): string[] {
@@ -638,6 +660,10 @@ export abstract class TbMapDataLayer<S extends MapDataLayerSettings = MapDataLay
 
   protected mapType(): MapType {
     return this.map.type();
+  }
+
+  protected convertLayerToDataKeys(layer: L.Layer): DataKeyValuePair[] {
+    return [];
   }
 
   public enableEditMode() {

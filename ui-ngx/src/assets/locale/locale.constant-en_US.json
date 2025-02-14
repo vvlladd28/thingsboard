@@ -7796,7 +7796,8 @@
                     "edit": "Edit marker",
                     "remove-marker-for": "Remove marker for '{{entityName}}'",
                     "place-marker": "Place marker",
-                    "place-marker-hint": "Click to place '{{entityName}}' entity"
+                    "place-marker-hint": "Click to place '{{entityName}}' entity",
+                    "create-marker-hint": "Click to place marker"
                 },
                 "polygon": {
                     "polygon-key": "Polygon key",
@@ -7815,10 +7816,15 @@
                     "continue-polygon-cut-hint": "Click to continue drawing",
                     "finish-polygon-cut-hint": "Click first marker to finish and save",
                     "polygon-place-first-point-hint": "Polygon for '{{entityName}}': click to place first point",
+                    "create-polygon-place-first-point-hint": "Polygon: click to place first point",
                     "continue-polygon-hint": "Polygon for '{{entityName}}': click to continue drawing",
+                    "create-continue-polygon-hint": "Polygon: click to continue drawing",
                     "finish-polygon-hint": "Polygon for '{{entityName}}': click first marker to finish and save",
+                    "create-finish-polygon-hint": "Polygon: click first marker to finish and save",
                     "rectangle-place-first-point-hint": "Rectangle for '{{entityName}}': click to place first point",
-                    "finish-rectangle-hint": "Rectangle for '{{entityName}}': click to finish and save"
+                    "create-rectangle-place-first-point-hint": "Rectangle: click to place first point",
+                    "finish-rectangle-hint": "Rectangle for '{{entityName}}': click to finish and save",
+                    "create-finish-rectangle-hint": "Rectangle: click to finish and save"
                 },
                 "circle": {
                     "circle-key": "Circle key",
@@ -7831,7 +7837,9 @@
                     "remove-circle-for": "Remove circle for '{{entityName}}'",
                     "draw-circle": "Draw circle",
                     "place-circle-center-hint": "Circle for '{{entityName}}': click to place circle center",
-                    "finish-circle-hint": "Circle for '{{entityName}}': click to finish and save circle"
+                    "create-circle-center-hint": "Circle: click to place circle center",
+                    "finish-circle-hint": "Circle for '{{entityName}}': click to finish and save circle",
+                    "create-finish-circle-hint": "Circle: click to finish and save circle"
                 },
                 "select-entity": "Select entity",
                 "select-entity-hint": "Hint: after selection click at the map to set position"
