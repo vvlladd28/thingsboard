@@ -38,17 +38,20 @@ import { PageComponent } from '@shared/components/page.component';
 import { DashboardWidget, DashboardWidgets } from '@home/models/dashboard-component.models';
 import { Store } from '@ngrx/store';
 import { AppState } from '@core/core.state';
-import { SafeStyle } from '@angular/platform-browser';
-import { isNotEmptyStr } from '@core/utils';
+import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
+import { isNotEmptyStr, mergeDeep } from '@core/utils';
 import { GridsterItemComponent } from 'angular-gridster2';
 import { UtilsService } from '@core/services/utils.service';
-import { from } from 'rxjs';
+import { from, map, Observable } from 'rxjs';
 import { DashboardUtilsService } from '@core/services/dashboard-utils.service';
 import { TbContextMenuEvent } from '@shared/models/jquery-event.models';
 import { WidgetHeaderActionButtonType } from '@shared/models/widget.models';
+import { WidgetComponent } from '@home/components/widget/widget.component';
+import { backgroundStyle, ComponentStyle, overlayStyle } from '@shared/models/widget-settings.models';
+import { ImagePipe } from '@shared/pipe/image.pipe';
+import { extractBorderRadiusStyle } from '@shared/models/style.models';
 import ITooltipsterInstance = JQueryTooltipster.ITooltipsterInstance;
 import ITooltipsterGeoHelper = JQueryTooltipster.ITooltipsterGeoHelper;
-import { WidgetComponent } from '@home/components/widget/widget.component';
 
 export enum WidgetComponentActionType {
   MOUSE_DOWN,
@@ -134,6 +137,9 @@ export class WidgetContainerComponent extends PageComponent implements OnInit, O
 
   widgetHeaderActionButtonType = WidgetHeaderActionButtonType;
 
+  style$: Observable<ComponentStyle>;
+  overlayStyle: ComponentStyle = {};
+
   private cssClass: string;
 
   private editWidgetActionsTooltip: ITooltipsterInstance;
@@ -143,7 +149,9 @@ export class WidgetContainerComponent extends PageComponent implements OnInit, O
               private renderer: Renderer2,
               private container: ViewContainerRef,
               private dashboardUtils: DashboardUtilsService,
-              private utils: UtilsService) {
+              private utils: UtilsService,
+              private imagePipe: ImagePipe,
+              private sanitizer: DomSanitizer,) {
     super(store);
   }
 
@@ -161,6 +169,13 @@ export class WidgetContainerComponent extends PageComponent implements OnInit, O
     if (dashboardContentElement) {
       this.initEditWidgetActionTooltip(dashboardContentElement);
     }
+    this.style$ = backgroundStyle(this.widget.background, this.imagePipe, this.sanitizer).pipe(
+      map(style => mergeDeep({}, style, this.widget.style))
+    );
+    this.overlayStyle = {
+      ...overlayStyle(this.widget.background.overlay),
+      borderRadius: extractBorderRadiusStyle(this.widget.style)
+    };
   }
 
   ngAfterViewInit(): void {

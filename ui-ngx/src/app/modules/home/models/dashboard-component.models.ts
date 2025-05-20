@@ -41,7 +41,7 @@ import { IAliasController, IStateController } from '@app/core/api/widget-api.mod
 import { enumerable } from '@shared/decorators/enumerable';
 import { UtilsService } from '@core/services/utils.service';
 import { TbPopoverComponent } from '@shared/components/popover.component';
-import { ComponentStyle, iconStyle, textStyle } from '@shared/models/widget-settings.models';
+import { BackgroundSettings, ComponentStyle, iconStyle, textStyle } from '@shared/models/widget-settings.models';
 import { TbContextMenuEvent } from '@shared/models/jquery-event.models';
 
 export interface WidgetsData {
@@ -355,6 +355,7 @@ export class DashboardWidget implements GridsterItem, IDashboardWidget {
 
   color: string;
   backgroundColor: string;
+  background: BackgroundSettings;
   padding: string;
   margin: string;
   borderRadius: string;
@@ -591,7 +592,8 @@ export class DashboardWidget implements GridsterItem, IDashboardWidget {
 
   updateWidgetParams(detectChanges = true) {
     this.color = this.widget.config.color || 'rgba(0, 0, 0, 0.87)';
-    this.backgroundColor = this.widget.config.backgroundColor || '#fff';
+    this.background = this.widget.config.background;
+    this.backgroundColor = this.widget.config.background.color;
     this.padding = this.widget.config.padding || '8px';
     this.margin = this.widget.config.margin || '0px';
     this.borderRadius = this.widget.config.borderRadius;
@@ -642,7 +644,6 @@ export class DashboardWidget implements GridsterItem, IDashboardWidget {
 
     this.style = {
       color: this.color,
-      backgroundColor: this.backgroundColor,
       padding: this.padding,
       margin: this.margin,
       borderRadius: this.borderRadius };

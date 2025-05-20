@@ -94,8 +94,8 @@ export class ValueCardWidgetComponent implements OnInit, AfterViewInit, OnDestro
   dateStyle: ComponentStyle = {};
   dateColor: ColorProcessor;
 
-  backgroundStyle$: Observable<ComponentStyle>;
-  overlayStyle: ComponentStyle = {};
+  // backgroundStyle$: Observable<ComponentStyle>;
+  // overlayStyle: ComponentStyle = {};
   padding: string;
 
   private panelResize$: ResizeObserver;
@@ -138,8 +138,8 @@ export class ValueCardWidgetComponent implements OnInit, AfterViewInit, OnDestro
     this.dateStyle = textStyle(this.settings.dateFont);
     this.dateColor = ColorProcessor.fromSettings(this.settings.dateColor);
 
-    this.backgroundStyle$ = backgroundStyle(this.settings.background, this.imagePipe, this.sanitizer);
-    this.overlayStyle = overlayStyle(this.settings.background.overlay);
+    // this.backgroundStyle$ = backgroundStyle(this.settings.background, this.imagePipe, this.sanitizer);
+    // this.overlayStyle = overlayStyle(this.settings.background.overlay);
     this.padding = this.settings.background.overlay.enabled ? undefined : this.settings.padding;
   }
 
@@ -167,8 +167,8 @@ export class ValueCardWidgetComponent implements OnInit, AfterViewInit, OnDestro
   }
 
   public onInit() {
-    const borderRadius = this.ctx.$widgetElement.css('borderRadius');
-    this.overlayStyle = {...this.overlayStyle, ...{borderRadius}};
+    // const borderRadius = this.ctx.$widgetElement.css('borderRadius');
+    // this.overlayStyle = {...this.overlayStyle, ...{borderRadius}};
     this.cd.detectChanges();
   }
 

@@ -47,6 +47,14 @@ div.tb-widget {
     align-items: flex-start;
   }
 
+  .tb-widget-overlay {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    bottom: 12px;
+    right: 12px;
+  }
+
   .tb-widget-title {
     display: flex;
     flex-direction: column;

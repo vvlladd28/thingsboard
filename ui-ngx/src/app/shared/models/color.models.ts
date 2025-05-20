@@ -14,6 +14,8 @@
 /// limitations under the License.
 ///
 
+import tinycolor from 'tinycolor2';
+
 export interface TbColor {
   light: string;
   dark: string;
@@ -21,4 +23,17 @@ export interface TbColor {
 
 export interface TbColorScheme {
   [key: string]: TbColor;
+}
+
+export const getBlendedColor = (background: string, foreground: string): string => {
+  if (tinycolor(foreground).getAlpha() !== 1) {
+    const bg = tinycolor(background).toRgb();
+    const fg = tinycolor(foreground).toRgb();
+    const a = (fg.a + bg.a * (1 - fg.a));
+    const r = Math.round((fg.r * fg.a + bg.r * bg.a * (1 - fg.a)) / a);
+    const g = Math.round((fg.g * fg.a + bg.g * bg.a * (1 - fg.a)) / a);
+    const b = Math.round((fg.b * fg.a + bg.b * bg.a * (1 - fg.a)) / a);
+    return tinycolor({r, g, b, a}).toString();
+  }
+  return foreground;
 }

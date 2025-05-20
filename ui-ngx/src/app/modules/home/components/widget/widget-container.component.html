@@ -27,7 +27,8 @@
      [class.tb-has-timewindow]="widget.hasTimewindow"
      [class.tb-edit]="isEdit || isEditingWidget"
      [class.tb-hover]="hovered"
-     [style]="widget.style">
+     [style]="style$ | async">
+  <div class="tb-widget-overlay" [style]="overlayStyle"></div>
   <div *ngIf="!!widgetComponent.widgetContext?.inited"
        class="tb-widget-header">
     <ng-container *ngIf="!widgetComponent.widgetContext?.embedTitlePanel">

@@ -31,7 +31,8 @@ import {
   DashboardLayoutsInfo,
   DashboardState,
   DashboardStateLayouts,
-  GridSettings, LayoutType,
+  GridSettings,
+  LayoutType,
   WidgetLayout
 } from '@shared/models/dashboard.models';
 import { deepClone, isDefined, isDefinedAndNotNull, isNotEmptyStr, isString, isUndefined } from '@core/utils';
@@ -61,6 +62,7 @@ import { MediaBreakpoints } from '@shared/models/constants';
 import { TranslateService } from '@ngx-translate/core';
 import { DashboardPageLayout } from '@home/components/dashboard-page/dashboard-page.models';
 import { maxGridsterCol, maxGridsterRow } from '@home/models/dashboard-component.models';
+import { getBlendedColor } from '@shared/models/color.models';
 
 @Injectable({
   providedIn: 'root'
@@ -240,6 +242,20 @@ export class DashboardUtilsService {
     }
     if (isDefined((widget as any).description)) {
       delete (widget as any).description;
+    }
+    if (isUndefined(widget.config.background)) {
+      const background = widget.config.settings?.background;
+      if (isBackgroundSettings(background)) {
+        widget.config.background = background;
+        if (isDefined(widget.config.backgroundColor)) {
+          widget.config.background.color = getBlendedColor(widget.config.backgroundColor, background.color);
+        }
+        delete widget.config.settings?.background;
+        delete widget.config.backgroundColor;
+      } else {
+        widget.config.background = colorBackground(widget.config.backgroundColor ?? '#fff');
+        delete widget.config.backgroundColor;
+      }
     }
     // Temp workaround
     if (['system.charts.state_chart',

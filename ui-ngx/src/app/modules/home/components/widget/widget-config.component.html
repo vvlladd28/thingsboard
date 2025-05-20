@@ -104,12 +104,17 @@
                           formControlName="color">
           </tb-color-input>
         </div>
+<!--        <div class="tb-form-row space-between">-->
+<!--          <div>{{ 'widget-config.background-color' | translate }}</div>-->
+<!--          <tb-color-input asBoxInput-->
+<!--                          colorClearButton-->
+<!--                          formControlName="backgroundColor">-->
+<!--          </tb-color-input>-->
+<!--        </div>-->
         <div class="tb-form-row space-between">
-          <div>{{ 'widget-config.background-color' | translate }}</div>
-          <tb-color-input asBoxInput
-                          colorClearButton
-                          formControlName="backgroundColor">
-          </tb-color-input>
+          <div>{{ 'widgets.background.background' | translate }}</div>
+          <tb-background-settings formControlName="background">
+          </tb-background-settings>
         </div>
         <div class="tb-form-row space-between">
           <div>{{ 'widget-config.padding' | translate }}</div>

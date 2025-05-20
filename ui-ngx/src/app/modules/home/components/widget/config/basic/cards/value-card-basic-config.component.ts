@@ -136,7 +136,7 @@ export class ValueCardBasicConfigComponent extends BasicWidgetConfigComponent {
       dateFont: [settings.dateFont, []],
       dateColor: [settings.dateColor, []],
 
-      background: [settings.background, []],
+      background: [configData.config.background, []],
 
       cardButtons: [this.getCardButtons(configData.config), []],
       borderRadius: [configData.config.borderRadius, []],
@@ -176,7 +176,7 @@ export class ValueCardBasicConfigComponent extends BasicWidgetConfigComponent {
     this.widgetConfig.config.settings.dateFont = config.dateFont;
     this.widgetConfig.config.settings.dateColor = config.dateColor;
 
-    this.widgetConfig.config.settings.background = config.background;
+    this.widgetConfig.config.background = config.background;
 
     this.setCardButtons(config.cardButtons, this.widgetConfig.config);
     this.widgetConfig.config.borderRadius = config.borderRadius;

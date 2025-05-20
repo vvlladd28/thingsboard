@@ -109,7 +109,6 @@ export class ValueCardWidgetSettingsComponent extends WidgetSettingsComponent {
       dateFont: [settings.dateFont, []],
       dateColor: [settings.dateColor, []],
 
-      background: [settings.background, []],
       padding: [settings.padding, []]
     });
   }

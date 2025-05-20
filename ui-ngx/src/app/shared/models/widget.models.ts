@@ -39,7 +39,13 @@ import { Dashboard } from '@shared/models/dashboard.models';
 import { IAliasController } from '@core/api/widget-api.models';
 import { isNotEmptyStr, mergeDeep, mergeDeepIgnoreArray } from '@core/utils';
 import { WidgetConfigComponentData } from '@home/models/widget-component.models';
-import { ComponentStyle, Font, TimewindowStyle, ValueFormatProcessor } from '@shared/models/widget-settings.models';
+import {
+  BackgroundSettings,
+  ComponentStyle,
+  Font,
+  TimewindowStyle,
+  ValueFormatProcessor
+} from '@shared/models/widget-settings.models';
 import { NULL_UUID } from '@shared/models/id/has-uuid';
 import { EntityInfoData, HasTenantId, HasVersion } from '@shared/models/entity.models';
 import {
@@ -896,7 +902,8 @@ export interface WidgetConfig {
   mobileHeight?: number;
   mobileOrder?: number;
   color?: string;
-  backgroundColor?: string;
+  backgroundColor?: string; //deprecated
+  background?: BackgroundSettings;
   padding?: string;
   margin?: string;
   borderRadius?: string;
