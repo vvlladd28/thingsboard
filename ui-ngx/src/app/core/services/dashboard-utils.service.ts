@@ -41,6 +41,7 @@ import {
   datasourcesHasOnlyComparisonAggregation,
   DatasourceType,
   defaultLegendConfig,
+  defaultOverlayPadding,
   isValidWidgetFullFqn,
   TargetDevice,
   TargetDeviceType,
@@ -63,6 +64,7 @@ import { TranslateService } from '@ngx-translate/core';
 import { DashboardPageLayout } from '@home/components/dashboard-page/dashboard-page.models';
 import { maxGridsterCol, maxGridsterRow } from '@home/models/dashboard-component.models';
 import { getBlendedColor } from '@shared/models/color.models';
+import { mergePadding } from '@shared/models/style.models';
 
 @Injectable({
   providedIn: 'root'
@@ -256,6 +258,14 @@ export class DashboardUtilsService {
         widget.config.background = colorBackground(widget.config.backgroundColor ?? '#fff');
         delete widget.config.backgroundColor;
       }
+    }
+    if (isDefinedAndNotNull(widget.config.settings?.padding)) {
+      if (widget.config.background.overlay.enabled) {
+        widget.config.padding = mergePadding(defaultOverlayPadding[widget.typeFullFqn] ?? '0px', widget.config.padding || '8px');
+      } else {
+        widget.config.padding = mergePadding(widget.config.settings.padding, widget.config.padding || '8px');
+      }
+      delete widget.config.settings?.padding;
     }
     // Temp workaround
     if (['system.charts.state_chart',

@@ -1117,3 +1117,7 @@ export abstract class WidgetSettingsComponent extends PageComponent implements
   }
 
 }
+
+export const defaultOverlayPadding: Record<string, string> = Object.freeze({
+  'system.cards.value_card': '24px'
+});
