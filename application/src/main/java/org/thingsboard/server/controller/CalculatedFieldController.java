@@ -107,9 +107,9 @@ public class CalculatedFieldController extends BaseController {
 
     public static final String CALCULATED_FIELD_ID = "calculatedFieldId";
 
-    public static final int TIMEOUT = 20;
+    static final int TIMEOUT = 20;
 
-    private static final String TEST_SCRIPT_EXPRESSION =
+    static final String TEST_SCRIPT_EXPRESSION =
             "Execute the Script expression and return the result. The format of request: \n\n"
             + MARKDOWN_CODE_BLOCK_START
             + "{\n" +
@@ -359,7 +359,7 @@ public class CalculatedFieldController extends BaseController {
                 .put("error", errorText);
     }
 
-    private long getLatestTimestamp(Map<String, TbelCfArg> arguments) {
+    static long getLatestTimestamp(Map<String, TbelCfArg> arguments) {
         long lastUpdateTimestamp = -1;
         for (TbelCfArg entry : arguments.values()) {
             if (entry instanceof TbelCfSingleValueArg singleValueArg) {
@@ -373,16 +373,16 @@ public class CalculatedFieldController extends BaseController {
         return lastUpdateTimestamp == -1 ? System.currentTimeMillis() : lastUpdateTimestamp;
     }
 
-    private void checkReferencedEntities(CalculatedFieldConfiguration calculatedFieldConfig) throws ThingsboardException {
+    void checkReferencedEntities(CalculatedFieldConfiguration calculatedFieldConfig) throws ThingsboardException {
         Set<EntityId> referencedEntityIds = calculatedFieldConfig.getReferencedEntities();
         for (EntityId referencedEntityId : referencedEntityIds) {
-            EntityType entityType = referencedEntityId.getEntityType();
-            switch (entityType) {
+            EntityType refEntityType = referencedEntityId.getEntityType();
+            switch (refEntityType) {
                 case TENANT -> {
                     return;
                 }
                 case CUSTOMER, ASSET, DEVICE -> checkEntityId(referencedEntityId, Operation.READ);
-                default -> throw new IllegalArgumentException("Calculated fields do not support '" + entityType + "' for referenced entities.");
+                default -> throw new IllegalArgumentException("Unsupported referenced entity type: '" + refEntityType + "'.");
             }
         }
     }

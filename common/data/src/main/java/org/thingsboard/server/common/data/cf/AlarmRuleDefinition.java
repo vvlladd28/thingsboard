@@ -63,7 +63,10 @@ public class AlarmRuleDefinition extends BaseData<CalculatedFieldId> implements 
     private AlarmCalculatedFieldConfiguration configuration;
     private Long version;
     @NoXss
-    @Schema(description = "Additional parameters of the alarm rule")
+    @Schema(description = "Additional parameters of the alarm rule. " +
+            "May include: 'description' (string).",
+            implementation = com.fasterxml.jackson.databind.JsonNode.class,
+            example = "{\"description\":\"High temperature alarm rule\"}")
     private JsonNode additionalInfo;
 
     public AlarmRuleDefinition() {}

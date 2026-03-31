@@ -39,8 +39,6 @@ import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.script.api.tbel.TbelCfArg;
 import org.thingsboard.script.api.tbel.TbelCfCtx;
 import org.thingsboard.script.api.tbel.TbelCfSingleValueArg;
-import org.thingsboard.script.api.tbel.TbelCfTsDoubleVal;
-import org.thingsboard.script.api.tbel.TbelCfTsRollingArg;
 import org.thingsboard.script.api.tbel.TbelInvokeService;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.EventInfo;
@@ -50,7 +48,6 @@ import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.cf.CalculatedFieldFilter;
 import org.thingsboard.server.common.data.cf.CalculatedFieldInfo;
 import org.thingsboard.server.common.data.cf.CalculatedFieldType;
-import org.thingsboard.server.common.data.cf.configuration.CalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.event.EventType;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.CalculatedFieldId;
@@ -59,18 +56,17 @@ import org.thingsboard.server.common.data.id.EntityIdFactory;
 import org.thingsboard.server.common.data.id.TenantId;
 import org.thingsboard.server.common.data.page.PageData;
 import org.thingsboard.server.common.data.page.PageLink;
-import org.thingsboard.server.service.security.permission.Operation;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.dao.event.EventService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
 import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldTbelScriptEngine;
 import org.thingsboard.server.service.entitiy.cf.TbCalculatedFieldService;
 import org.thingsboard.server.service.security.model.SecurityUser;
+import org.thingsboard.server.service.security.permission.Operation;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -79,6 +75,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static org.thingsboard.server.controller.CalculatedFieldController.TIMEOUT;
 import static org.thingsboard.server.controller.ControllerConstants.CF_TEXT_SEARCH_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.ENTITY_ID_PARAM_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.ENTITY_TYPE_PARAM_DESCRIPTION;
@@ -99,35 +96,20 @@ import static org.thingsboard.server.controller.ControllerConstants.UUID_WIKI_LI
 public class AlarmRuleController extends BaseController {
 
     private final TbCalculatedFieldService tbCalculatedFieldService;
+    private final CalculatedFieldController calculatedFieldController;
     private final EventService eventService;
     private final TbelInvokeService tbelInvokeService;
 
     public static final String ALARM_RULE_ID = "alarmRuleId";
 
-    public static final int TIMEOUT = 20;
-
     private static final String TEST_SCRIPT_EXPRESSION =
-            "Execute the Script expression and return the result. The format of request: \n\n"
+            "Execute the alarm rule TBEL condition expression and return the result. " +
+            "Alarm rule expressions must return a boolean value. The format of request: \n\n"
             + MARKDOWN_CODE_BLOCK_START
             + "{\n" +
-            "  \"expression\": \"var temp = 0; foreach(element: temperature.values) {temp += element.value;} var avgTemperature = temp / temperature.values.size(); var adjustedTemperature = avgTemperature + 0.1 * humidity.value; return {\\\"adjustedTemperature\\\": adjustedTemperature};\",\n" +
+            "  \"expression\": \"return temperature > 50;\",\n" +
             "  \"arguments\": {\n" +
-            "    \"temperature\": {\n" +
-            "      \"type\": \"TS_ROLLING\",\n" +
-            "      \"timeWindow\": {\n" +
-            "        \"startTs\": 1739775630002,\n" +
-            "        \"endTs\": 65432211,\n" +
-            "        \"limit\": 5\n" +
-            "      },\n" +
-            "      \"values\": [\n" +
-            "        { \"ts\": 1739775639851, \"value\": 23 },\n" +
-            "        { \"ts\": 1739775664561, \"value\": 43 },\n" +
-            "        { \"ts\": 1739775713079, \"value\": 15 },\n" +
-            "        { \"ts\": 1739775999522, \"value\": 34 },\n" +
-            "        { \"ts\": 1739776228452, \"value\": 22 }\n" +
-            "      ]\n" +
-            "    },\n" +
-            "    \"humidity\": { \"type\": \"SINGLE_VALUE\", \"ts\": 1739776478057, \"value\": 23 }\n" +
+            "    \"temperature\": { \"type\": \"SINGLE_VALUE\", \"ts\": 1739776478057, \"value\": 55 }\n" +
             "  }\n" +
             "}"
             + MARKDOWN_CODE_BLOCK_END
@@ -147,14 +129,13 @@ public class AlarmRuleController extends BaseController {
         alarmRuleDefinition.setTenantId(getTenantId());
         checkEntityId(alarmRuleDefinition.getEntityId(), Operation.WRITE_CALCULATED_FIELD);
         CalculatedField calculatedField = alarmRuleDefinition.toCalculatedField();
-        checkReferencedEntities(calculatedField.getConfiguration());
+        calculatedFieldController.checkReferencedEntities(calculatedField.getConfiguration());
         CalculatedField saved = tbCalculatedFieldService.save(calculatedField, getCurrentUser());
         return AlarmRuleDefinition.fromCalculatedField(saved);
     }
 
     @ApiOperation(value = "Get Alarm Rule (getAlarmRuleById)",
-            notes = "Fetch the Alarm Rule object based on the provided Alarm Rule Id."
-    )
+            notes = "Fetch the Alarm Rule object based on the provided Alarm Rule Id." + TENANT_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
     @GetMapping("/alarm/rule/{alarmRuleId}")
     public AlarmRuleDefinition getAlarmRuleById(@Parameter @PathVariable(ALARM_RULE_ID) String strAlarmRuleId) throws ThingsboardException {
@@ -167,8 +148,7 @@ public class AlarmRuleController extends BaseController {
     }
 
     @ApiOperation(value = "Get Alarm Rules by Entity Id (getAlarmRulesByEntityId)",
-            notes = "Fetch the Alarm Rules based on the provided Entity Id."
-    )
+            notes = "Fetch the Alarm Rules based on the provided Entity Id." + TENANT_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
     @GetMapping(value = "/alarm/rule/{entityType}/{entityId}")
     public PageData<AlarmRuleDefinition> getAlarmRulesByEntityId(
@@ -188,7 +168,7 @@ public class AlarmRuleController extends BaseController {
     }
 
     @ApiOperation(value = "Get alarm rules (getAlarmRules)",
-            notes = "Fetch tenant alarm rules based on the filter.")
+            notes = "Fetch tenant alarm rules based on the filter." + TENANT_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
     @GetMapping(value = "/alarm/rules")
     public PageData<AlarmRuleDefinitionInfo> getAlarmRules(@Parameter(description = PAGE_SIZE_DESCRIPTION, required = true)
@@ -230,7 +210,7 @@ public class AlarmRuleController extends BaseController {
     }
 
     @ApiOperation(value = "Get alarm rule names (getAlarmRuleNames)",
-            notes = "Fetch the list of alarm rule names.")
+            notes = "Fetch the list of alarm rule names." + TENANT_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
     @GetMapping(value = "/alarm/rules/names")
     public PageData<String> getAlarmRuleNames(@Parameter(description = PAGE_SIZE_DESCRIPTION, required = true)
@@ -274,12 +254,12 @@ public class AlarmRuleController extends BaseController {
                 .orElse(null);
     }
 
-    @ApiOperation(value = "Test Script expression",
+    @ApiOperation(value = "Test alarm rule TBEL expression (testAlarmRuleScript)",
             notes = TEST_SCRIPT_EXPRESSION + TENANT_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
     @PostMapping("/alarm/rule/testScript")
     public JsonNode testAlarmRuleScript(
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Test alarm rule TBEL expression.")
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Test alarm rule TBEL condition expression. The expression must return a boolean value.")
             @RequestBody JsonNode inputParams) {
         String expression = inputParams.get("expression").asText();
         Map<String, TbelCfArg> arguments = Objects.requireNonNullElse(
@@ -308,7 +288,7 @@ public class AlarmRuleController extends BaseController {
             );
 
             Object[] args = new Object[ctxAndArgNames.size()];
-            args[0] = new TbelCfCtx(arguments, getLatestTimestamp(arguments));
+            args[0] = new TbelCfCtx(arguments, CalculatedFieldController.getLatestTimestamp(arguments));
             for (int i = 1; i < ctxAndArgNames.size(); i++) {
                 var arg = arguments.get(ctxAndArgNames.get(i));
                 if (arg instanceof TbelCfSingleValueArg svArg) {
@@ -332,34 +312,6 @@ public class AlarmRuleController extends BaseController {
         return JacksonUtil.newObjectNode()
                 .put("output", output)
                 .put("error", errorText);
-    }
-
-    private long getLatestTimestamp(Map<String, TbelCfArg> arguments) {
-        long lastUpdateTimestamp = -1;
-        for (TbelCfArg entry : arguments.values()) {
-            if (entry instanceof TbelCfSingleValueArg singleValueArg) {
-                long ts = singleValueArg.getTs();
-                lastUpdateTimestamp = Math.max(lastUpdateTimestamp, ts);
-            } else if (entry instanceof TbelCfTsRollingArg tsRollingArg) {
-                long maxTs = tsRollingArg.getValues().stream().mapToLong(TbelCfTsDoubleVal::getTs).max().orElse(-1);
-                lastUpdateTimestamp = Math.max(lastUpdateTimestamp, maxTs);
-            }
-        }
-        return lastUpdateTimestamp == -1 ? System.currentTimeMillis() : lastUpdateTimestamp;
-    }
-
-    private void checkReferencedEntities(CalculatedFieldConfiguration calculatedFieldConfig) throws ThingsboardException {
-        Set<EntityId> referencedEntityIds = calculatedFieldConfig.getReferencedEntities();
-        for (EntityId referencedEntityId : referencedEntityIds) {
-            EntityType entityTypeVal = referencedEntityId.getEntityType();
-            switch (entityTypeVal) {
-                case TENANT -> {
-                    return;
-                }
-                case CUSTOMER, ASSET, DEVICE -> checkEntityId(referencedEntityId, Operation.READ);
-                default -> throw new IllegalArgumentException("Calculated fields do not support '" + entityTypeVal + "' for referenced entities.");
-            }
-        }
     }
 
 }
