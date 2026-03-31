@@ -25,7 +25,7 @@ import { CalculatedField, CalculatedFieldArgument, CalculatedFieldType } from '@
 import { EntityType, entityTypeTranslations } from '@shared/models/entity-type.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ScriptLanguage } from '@shared/models/rule-node.models';
-import { CalculatedFieldsService } from '@core/http/calculated-fields.service';
+import { AlarmRulesService } from '@core/http/alarm-rules.service';
 import { EntityId } from '@shared/models/id/entity-id';
 import { AdditionalDebugActionConfig } from '@home/components/entity/debug/entity-debug-settings.model';
 import { COMMA, ENTER, SEMICOLON } from "@angular/cdk/keycodes";
@@ -97,7 +97,7 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
               protected router: Router,
               @Inject(MAT_DIALOG_DATA) public data: AlarmRuleDialogData,
               protected dialogRef: MatDialogRef<AlarmRuleDialogComponent, CalculatedField>,
-              private calculatedFieldsService: CalculatedFieldsService,
+              private alarmRulesService: AlarmRulesService,
               private destroyRef: DestroyRef,
               private cfFormService: CalculatedFieldFormService) {
     super(store, router, dialogRef);
@@ -173,7 +173,7 @@ export class AlarmRuleDialogComponent extends DialogComponent<AlarmRuleDialogCom
       const alarmRule = { entityId: this.data.entityId, ...(this.data.value ?? {}),  ...this.fromGroupValue};
       alarmRule.configuration.type = CalculatedFieldType.ALARM;
 
-      this.calculatedFieldsService.saveCalculatedField(alarmRule)
+      this.alarmRulesService.saveAlarmRule(alarmRule)
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: calculatedField => this.dialogRef.close(calculatedField),

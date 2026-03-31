@@ -35,7 +35,7 @@ import { getCurrentAuthUser } from '@core/auth/auth.selectors';
 import { DestroyRef, Renderer2 } from '@angular/core';
 import { EntityDebugSettings } from '@shared/models/entity.models';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CalculatedFieldsService } from '@core/http/calculated-fields.service';
+import { AlarmRulesService } from '@core/http/alarm-rules.service';
 import { catchError, filter, first, switchMap, tap } from 'rxjs/operators';
 import {
   ArgumentEntityType,
@@ -84,7 +84,7 @@ export class AlarmRulesTableConfig extends EntityTableConfig<AlarmRuleTableEntit
 
   alarmRuleFilterConfig: CalculatedFieldsQuery;
 
-  constructor(private calculatedFieldsService: CalculatedFieldsService,
+  constructor(private alarmRulesService: AlarmRulesService,
               private translate: TranslateService,
               private dialog: MatDialog,
               private datePipe: DatePipe,
@@ -128,14 +128,14 @@ export class AlarmRulesTableConfig extends EntityTableConfig<AlarmRuleTableEntit
 
     this.entitiesFetchFunction = (pageLink: PageLink) => this.fetchCalculatedFields(pageLink);
     this.addEntity = this.getCalculatedAlarmDialog.bind(this);
-    this.loadEntity = id => this.calculatedFieldsService.getCalculatedFieldById(id.id);
-    this.saveEntity = (alarmRule) => this.calculatedFieldsService.saveCalculatedField(alarmRule);
+    this.loadEntity = id => this.alarmRulesService.getAlarmRuleById(id.id);
+    this.saveEntity = (alarmRule) => this.alarmRulesService.saveAlarmRule(alarmRule);
 
     this.deleteEntityTitle = (field) => this.translate.instant('alarm-rule.delete-title', {title: field.name});
     this.deleteEntityContent = () => this.translate.instant('alarm-rule.delete-text');
     this.deleteEntitiesTitle = count => this.translate.instant('alarm-rule.delete-multiple-title', {count});
     this.deleteEntitiesContent = () => this.translate.instant('alarm-rule.delete-multiple-text');
-    this.deleteEntity = id => this.calculatedFieldsService.deleteCalculatedField(id.id);
+    this.deleteEntity = id => this.alarmRulesService.deleteAlarmRule(id.id);
 
     this.onEntityAction = action => this.onCFAction(action);
 
@@ -216,8 +216,8 @@ export class AlarmRulesTableConfig extends EntityTableConfig<AlarmRuleTableEntit
 
   fetchCalculatedFields(pageLink: PageLink): Observable<PageData<AlarmRuleTableEntity>> {
     return this.pageMode ?
-      this.calculatedFieldsService.getCalculatedFields(pageLink, {types: [CalculatedFieldType.ALARM], ...this.alarmRuleFilterConfig}) :
-      this.calculatedFieldsService.getCalculatedFieldsByEntityId(this.entityId, pageLink, CalculatedFieldType.ALARM);
+      this.alarmRulesService.getAlarmRules(pageLink, this.alarmRuleFilterConfig) :
+      this.alarmRulesService.getAlarmRulesByEntityId(this.entityId, pageLink);
   }
 
   onOpenDebugConfig($event: Event, calculatedField: AlarmRuleTableEntity): void {
@@ -353,7 +353,7 @@ export class AlarmRulesTableConfig extends EntityTableConfig<AlarmRuleTableEntit
         }),
         switchMap(calculatedField => this.getCalculatedAlarmDialog(this.updateImportedCalculatedField(calculatedField), 'action.add', true)),
         filter(Boolean),
-        switchMap(calculatedField => this.calculatedFieldsService.saveCalculatedField(calculatedField)),
+        switchMap(calculatedField => this.alarmRulesService.saveAlarmRule(calculatedField)),
         filter(Boolean),
         takeUntilDestroyed(this.destroyRef)
       )
@@ -375,8 +375,8 @@ export class AlarmRulesTableConfig extends EntityTableConfig<AlarmRuleTableEntit
   }
 
   private onDebugConfigChanged(id: string, debugSettings: EntityDebugSettings): void {
-    this.calculatedFieldsService.getCalculatedFieldById(id).pipe(
-      switchMap(field => this.calculatedFieldsService.saveCalculatedField({ ...field, debugSettings })),
+    this.alarmRulesService.getAlarmRuleById(id).pipe(
+      switchMap(field => this.alarmRulesService.saveAlarmRule({ ...field, debugSettings })),
       catchError(() => of(null)),
       takeUntilDestroyed(this.destroyRef),
     ).subscribe(() => this.updateData());
