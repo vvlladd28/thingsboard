@@ -43,6 +43,7 @@ import org.thingsboard.script.api.tbel.TbelInvokeService;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.EventInfo;
 import org.thingsboard.server.common.data.cf.AlarmRuleDefinition;
+import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.common.data.cf.AlarmRuleDefinitionInfo;
 import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.cf.CalculatedFieldFilter;
@@ -141,8 +142,7 @@ public class AlarmRuleController extends BaseController {
     public AlarmRuleDefinition getAlarmRuleById(@Parameter @PathVariable(ALARM_RULE_ID) String strAlarmRuleId) throws ThingsboardException {
         checkParameter(ALARM_RULE_ID, strAlarmRuleId);
         CalculatedFieldId calculatedFieldId = new CalculatedFieldId(toUUID(strAlarmRuleId));
-        CalculatedField calculatedField = tbCalculatedFieldService.findById(calculatedFieldId, getCurrentUser());
-        checkNotNull(calculatedField);
+        CalculatedField calculatedField = checkAlarmRule(calculatedFieldId);
         checkEntityId(calculatedField.getEntityId(), Operation.READ_CALCULATED_FIELD);
         return AlarmRuleDefinition.fromCalculatedField(calculatedField);
     }
@@ -233,7 +233,7 @@ public class AlarmRuleController extends BaseController {
     public void deleteAlarmRule(@PathVariable(ALARM_RULE_ID) String strAlarmRuleId) throws Exception {
         checkParameter(ALARM_RULE_ID, strAlarmRuleId);
         CalculatedFieldId calculatedFieldId = new CalculatedFieldId(toUUID(strAlarmRuleId));
-        CalculatedField calculatedField = tbCalculatedFieldService.findById(calculatedFieldId, getCurrentUser());
+        CalculatedField calculatedField = checkAlarmRule(calculatedFieldId);
         checkEntityId(calculatedField.getEntityId(), Operation.WRITE_CALCULATED_FIELD);
         tbCalculatedFieldService.delete(calculatedField, getCurrentUser());
     }
@@ -246,7 +246,7 @@ public class AlarmRuleController extends BaseController {
     public JsonNode getLatestAlarmRuleDebugEvent(@Parameter @PathVariable(ALARM_RULE_ID) String strAlarmRuleId) throws ThingsboardException {
         checkParameter(ALARM_RULE_ID, strAlarmRuleId);
         CalculatedFieldId calculatedFieldId = new CalculatedFieldId(toUUID(strAlarmRuleId));
-        CalculatedField calculatedField = tbCalculatedFieldService.findById(calculatedFieldId, getCurrentUser());
+        CalculatedField calculatedField = checkAlarmRule(calculatedFieldId);
         checkEntityId(calculatedField.getEntityId(), Operation.READ_CALCULATED_FIELD);
         TenantId tenantId = getCurrentUser().getTenantId();
         return Optional.ofNullable(eventService.findLatestEvents(tenantId, calculatedFieldId, EventType.DEBUG_CALCULATED_FIELD, 1))
@@ -260,7 +260,8 @@ public class AlarmRuleController extends BaseController {
     @PostMapping("/alarm/rule/testScript")
     public JsonNode testAlarmRuleScript(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Test alarm rule TBEL condition expression. The expression must return a boolean value.")
-            @RequestBody JsonNode inputParams) {
+            @RequestBody JsonNode inputParams) throws ThingsboardException {
+        checkParameter("expression", inputParams.has("expression") ? inputParams.get("expression").asText() : null);
         String expression = inputParams.get("expression").asText();
         Map<String, TbelCfArg> arguments = Objects.requireNonNullElse(
                 JacksonUtil.convertValue(inputParams.get("arguments"), new TypeReference<>() {}),
@@ -312,6 +313,15 @@ public class AlarmRuleController extends BaseController {
         return JacksonUtil.newObjectNode()
                 .put("output", output)
                 .put("error", errorText);
+    }
+
+    private CalculatedField checkAlarmRule(CalculatedFieldId calculatedFieldId) throws ThingsboardException {
+        CalculatedField calculatedField = tbCalculatedFieldService.findById(calculatedFieldId, getCurrentUser());
+        checkNotNull(calculatedField);
+        if (calculatedField.getType() != CalculatedFieldType.ALARM) {
+            throw new ThingsboardException("Alarm rule not found", ThingsboardErrorCode.ITEM_NOT_FOUND);
+        }
+        return calculatedField;
     }
 
 }
