@@ -150,7 +150,7 @@ public class AlarmRuleController extends BaseController {
     @ApiOperation(value = "Get Alarm Rules by Entity Id (getAlarmRulesByEntityId)",
             notes = "Fetch the Alarm Rules based on the provided Entity Id." + TENANT_AUTHORITY_PARAGRAPH)
     @PreAuthorize("hasAuthority('TENANT_ADMIN')")
-    @GetMapping(value = "/alarm/rule/{entityType}/{entityId}")
+    @GetMapping(value = "/alarm/rules/{entityType}/{entityId}")
     public PageData<AlarmRuleDefinition> getAlarmRulesByEntityId(
             @Parameter(description = ENTITY_TYPE_PARAM_DESCRIPTION, required = true, schema = @Schema(defaultValue = "DEVICE")) @PathVariable("entityType") String entityType,
             @Parameter(description = ENTITY_ID_PARAM_DESCRIPTION, required = true) @PathVariable("entityId") String entityIdStr,

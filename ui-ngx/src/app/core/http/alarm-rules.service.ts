@@ -56,7 +56,7 @@ export class AlarmRulesService {
   }
 
   public getAlarmRulesByEntityId({ entityType, id }: EntityId, pageLink: PageLink, config?: RequestConfig): Observable<PageData<CalculatedField>> {
-    return this.http.get<PageData<CalculatedField>>(`/api/alarm/rule/${entityType}/${id}${pageLink.toQuery()}`, defaultHttpOptionsFromConfig(config));
+    return this.http.get<PageData<CalculatedField>>(`/api/alarm/rules/${entityType}/${id}${pageLink.toQuery()}`, defaultHttpOptionsFromConfig(config));
   }
 
   public testScript(inputParams: CalculatedFieldTestScriptInputParams, config?: RequestConfig): Observable<EntityTestScriptResult> {
