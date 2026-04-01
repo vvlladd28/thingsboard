@@ -36,6 +36,7 @@
           <section class="flex flex-col" style="width: 300px;">
             <span translate>dashboard.select-existing</span>
             <tb-dashboard-autocomplete formControlName="dashboardId"
+                                       appearance="outline"
                                        [required]="addWidgetFormGroup.get('addToDashboardType').value === 0"
                                        [selectFirstDashboard]="false">
             </tb-dashboard-autocomplete>
