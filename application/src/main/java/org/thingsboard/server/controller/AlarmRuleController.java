@@ -15,15 +15,10 @@
  */
 package org.thingsboard.server.controller;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.ObjectUtils;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -35,11 +30,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.thingsboard.common.util.JacksonUtil;
-import org.thingsboard.script.api.tbel.TbelCfArg;
-import org.thingsboard.script.api.tbel.TbelCfCtx;
-import org.thingsboard.script.api.tbel.TbelCfSingleValueArg;
-import org.thingsboard.script.api.tbel.TbelInvokeService;
 import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.EventInfo;
 import org.thingsboard.server.common.data.cf.AlarmRuleDefinition;
@@ -49,6 +39,7 @@ import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.cf.CalculatedFieldFilter;
 import org.thingsboard.server.common.data.cf.CalculatedFieldInfo;
 import org.thingsboard.server.common.data.cf.CalculatedFieldType;
+import org.thingsboard.server.common.data.cf.configuration.CalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.event.EventType;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.CalculatedFieldId;
@@ -60,23 +51,17 @@ import org.thingsboard.server.common.data.page.PageLink;
 import org.thingsboard.server.config.annotations.ApiOperation;
 import org.thingsboard.server.dao.event.EventService;
 import org.thingsboard.server.queue.util.TbCoreComponent;
-import org.thingsboard.server.service.cf.ctx.state.CalculatedFieldTbelScriptEngine;
 import org.thingsboard.server.service.entitiy.cf.TbCalculatedFieldService;
 import org.thingsboard.server.service.security.model.SecurityUser;
 import org.thingsboard.server.service.security.permission.Operation;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static org.thingsboard.server.controller.CalculatedFieldController.TIMEOUT;
 import static org.thingsboard.server.controller.ControllerConstants.CF_TEXT_SEARCH_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.ENTITY_ID_PARAM_DESCRIPTION;
 import static org.thingsboard.server.controller.ControllerConstants.ENTITY_TYPE_PARAM_DESCRIPTION;
@@ -93,13 +78,10 @@ import static org.thingsboard.server.controller.ControllerConstants.UUID_WIKI_LI
 @TbCoreComponent
 @RequestMapping("/api")
 @RequiredArgsConstructor
-@Slf4j
 public class AlarmRuleController extends BaseController {
 
     private final TbCalculatedFieldService tbCalculatedFieldService;
-    private final CalculatedFieldController calculatedFieldController;
     private final EventService eventService;
-    private final TbelInvokeService tbelInvokeService;
 
     public static final String ALARM_RULE_ID = "alarmRuleId";
 
@@ -130,7 +112,7 @@ public class AlarmRuleController extends BaseController {
         alarmRuleDefinition.setTenantId(getTenantId());
         checkEntityId(alarmRuleDefinition.getEntityId(), Operation.WRITE_CALCULATED_FIELD);
         CalculatedField calculatedField = alarmRuleDefinition.toCalculatedField();
-        calculatedFieldController.checkReferencedEntities(calculatedField.getConfiguration());
+        checkReferencedEntities(calculatedField.getConfiguration());
         CalculatedField saved = tbCalculatedFieldService.save(calculatedField, getCurrentUser());
         return AlarmRuleDefinition.fromCalculatedField(saved);
     }
@@ -188,12 +170,10 @@ public class AlarmRuleController extends BaseController {
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
         SecurityUser user = getCurrentUser();
 
-        Set<CalculatedFieldType> types = EnumSet.of(CalculatedFieldType.ALARM);
-
         Set<EntityType> entityTypes;
         if (entityType == null) {
             entityTypes = CalculatedField.SUPPORTED_ENTITIES.entrySet().stream()
-                    .filter(entry -> CollectionUtils.containsAny(entry.getValue(), types))
+                    .filter(entry -> entry.getValue().contains(CalculatedFieldType.ALARM))
                     .map(Map.Entry::getKey)
                     .collect(Collectors.toSet());
         } else {
@@ -201,7 +181,7 @@ public class AlarmRuleController extends BaseController {
         }
 
         CalculatedFieldFilter filter = CalculatedFieldFilter.builder()
-                .types(types)
+                .types(EnumSet.of(CalculatedFieldType.ALARM))
                 .entityTypes(entityTypes)
                 .entityIds(entities)
                 .build();
@@ -262,57 +242,21 @@ public class AlarmRuleController extends BaseController {
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Test alarm rule TBEL condition expression. The expression must return a boolean value.")
             @RequestBody JsonNode inputParams) throws ThingsboardException {
         checkParameter("expression", inputParams.has("expression") ? inputParams.get("expression").asText() : null);
-        String expression = inputParams.get("expression").asText();
-        Map<String, TbelCfArg> arguments = Objects.requireNonNullElse(
-                JacksonUtil.convertValue(inputParams.get("arguments"), new TypeReference<>() {}),
-                Collections.emptyMap()
-        );
+        return tbCalculatedFieldService.executeTestScript(getTenantId(), inputParams);
+    }
 
-        ArrayList<String> ctxAndArgNames = new ArrayList<>(arguments.size() + 1);
-        ctxAndArgNames.add("ctx");
-        ctxAndArgNames.addAll(arguments.keySet());
-
-        String output = "";
-        String errorText = "";
-
-        CalculatedFieldTbelScriptEngine engine = null;
-        try {
-            if (tbelInvokeService == null) {
-                throw new IllegalArgumentException("TBEL script engine is disabled!");
-            }
-
-            engine = new CalculatedFieldTbelScriptEngine(
-                    getTenantId(),
-                    tbelInvokeService,
-                    expression,
-                    ctxAndArgNames.toArray(String[]::new)
-            );
-
-            Object[] args = new Object[ctxAndArgNames.size()];
-            args[0] = new TbelCfCtx(arguments, CalculatedFieldController.getLatestTimestamp(arguments));
-            for (int i = 1; i < ctxAndArgNames.size(); i++) {
-                var arg = arguments.get(ctxAndArgNames.get(i));
-                if (arg instanceof TbelCfSingleValueArg svArg) {
-                    args[i] = svArg.getValue();
-                } else {
-                    args[i] = arg;
+    private void checkReferencedEntities(CalculatedFieldConfiguration calculatedFieldConfig) throws ThingsboardException {
+        Set<EntityId> referencedEntityIds = calculatedFieldConfig.getReferencedEntities();
+        for (EntityId referencedEntityId : referencedEntityIds) {
+            EntityType refEntityType = referencedEntityId.getEntityType();
+            switch (refEntityType) {
+                case TENANT -> {
+                    return;
                 }
-            }
-
-            JsonNode json = engine.executeJsonAsync(args).get(TIMEOUT, TimeUnit.SECONDS);
-            output = JacksonUtil.toString(json);
-        } catch (Exception e) {
-            log.error("Error evaluating expression", e);
-            Throwable rootCause = ExceptionUtils.getRootCause(e);
-            errorText = ObjectUtils.firstNonNull(rootCause.getMessage(), e.getMessage(), e.getClass().getSimpleName());
-        } finally {
-            if (engine != null) {
-                engine.destroy();
+                case CUSTOMER, ASSET, DEVICE -> checkEntityId(referencedEntityId, Operation.READ);
+                default -> throw new IllegalArgumentException("Unsupported referenced entity type: '" + refEntityType + "'.");
             }
         }
-        return JacksonUtil.newObjectNode()
-                .put("output", output)
-                .put("error", errorText);
     }
 
     private CalculatedField checkAlarmRule(CalculatedFieldId calculatedFieldId) throws ThingsboardException {
