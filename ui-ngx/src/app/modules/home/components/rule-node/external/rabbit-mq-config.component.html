@@ -99,12 +99,13 @@
     }
   </mat-form-field>
   <label translate class="tb-title">rule-node-config.client-properties</label>
-  <tb-kv-map-config-old
+  <tb-kv-map-config
     required="false"
     formControlName="clientProperties"
-    keyText="rule-node-config.key"
-    keyRequiredText="rule-node-config.key-required"
-    valText="rule-node-config.value"
-    valRequiredText="rule-node-config.value-required">
-  </tb-kv-map-config-old>
+    [keyText]="'rule-node-config.key' | translate"
+    [keyRequiredText]="'rule-node-config.key-required' | translate"
+    [valText]="'rule-node-config.value' | translate"
+    [valRequiredText]="'rule-node-config.value-required' | translate"
+    [emptyText]="'rule-node-config.client-properties-empty' | translate">
+  </tb-kv-map-config>
 </section>

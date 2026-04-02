@@ -61,15 +61,16 @@
         {{ 'rule-node-config.headers' | translate }}
       </mat-expansion-panel-header>
       <ng-template matExpansionPanelContent>
-        <tb-kv-map-config-old
+        <div class="tb-form-hint tb-primary-fill mb-4" [innerHTML]="'rule-node-config.headers-hint' | translate | safe: 'html'"></div>
+        <tb-kv-map-config
+          required="false"
           formControlName="headers"
-          keyText="rule-node-config.header"
-          keyRequiredText="rule-node-config.header-required"
-          valText="rule-node-config.value"
-          valRequiredText="rule-node-config.value-required"
-          description="rule-node-config.headers-hint"
-          emptyText="rule-node-config.headers-empty">
-        </tb-kv-map-config-old>
+          [keyText]="'rule-node-config.header' | translate"
+          [keyRequiredText]="'rule-node-config.header-required' | translate"
+          [valText]="'rule-node-config.value' | translate"
+          [valRequiredText]="'rule-node-config.value-required' | translate"
+          [emptyText]="'rule-node-config.headers-empty' | translate">
+        </tb-kv-map-config>
       </ng-template>
     </mat-expansion-panel>
   </div>
