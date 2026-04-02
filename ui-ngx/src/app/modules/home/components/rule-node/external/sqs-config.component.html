@@ -63,7 +63,7 @@
     [valRequiredText]="'rule-node-config.value-required' | translate"
     [emptyText]="'rule-node-config.message-attributes-empty' | translate">
   </tb-kv-map-config>
-  <mat-form-field class="mat-block" appearance="outline">
+  <mat-form-field class="mat-block mt-2" appearance="outline">
     <mat-label translate>rule-node-config.aws-access-key-id</mat-label>
     <input required matInput formControlName="accessKeyId">
     @if (sqsConfigForm.get('accessKeyId').hasError('required')) {
@@ -72,7 +72,7 @@
       </mat-error>
     }
   </mat-form-field>
-  <mat-form-field class="mat-block" appearance="outline">
+  <mat-form-field class="mat-block mt-2" appearance="outline">
     <mat-label translate>rule-node-config.aws-secret-access-key</mat-label>
     <input required matInput formControlName="secretAccessKey">
     @if (sqsConfigForm.get('secretAccessKey').hasError('required')) {
@@ -81,7 +81,7 @@
       </mat-error>
     }
   </mat-form-field>
-  <mat-form-field class="mat-block" appearance="outline">
+  <mat-form-field class="mat-block mt-2" appearance="outline">
     <mat-label translate>rule-node-config.aws-region</mat-label>
     <input required matInput formControlName="region">
     @if (sqsConfigForm.get('region').hasError('required')) {
