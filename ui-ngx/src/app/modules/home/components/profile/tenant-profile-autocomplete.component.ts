@@ -73,7 +73,7 @@ export class TenantProfileAutocompleteComponent implements ControlValueAccessor,
   showDetailsPageLink = false;
 
   @Input()
-  appearance: MatFormFieldAppearance = 'fill'
+  appearance: MatFormFieldAppearance = 'fill';
 
   @Output()
   tenantProfileUpdated = new EventEmitter<TenantProfileId>();

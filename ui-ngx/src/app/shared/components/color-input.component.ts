@@ -19,7 +19,7 @@ import {
   Component,
   DestroyRef,
   ElementRef,
-  forwardRef, input,
+  forwardRef,
   Input,
   OnInit,
   Renderer2,
