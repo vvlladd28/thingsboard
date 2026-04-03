@@ -21,7 +21,7 @@ import {
   EntityTableColumn,
   EntityTableConfig
 } from '@home/models/entity/entities-table-config.models';
-import { EntityType, entityTypeResources, entityTypeTranslations } from '@shared/models/entity-type.models';
+import { EntityType, entityTypeTranslations } from '@shared/models/entity-type.models';
 import { TranslateService } from '@ngx-translate/core';
 import { Direction } from '@shared/models/page/sort-order';
 import { MatDialog } from '@angular/material/dialog';
@@ -40,10 +40,9 @@ import { catchError, filter, first, switchMap, tap } from 'rxjs/operators';
 import {
   ArgumentEntityType,
   ArgumentType,
-  CalculatedField,
   CalculatedFieldAlarmRule,
+  CalculatedFieldAlarmRuleInfo,
   CalculatedFieldEventArguments,
-  CalculatedFieldInfo,
   CalculatedFieldsQuery,
   CalculatedFieldType,
   getCalculatedFieldArgumentsEditorCompleter,
@@ -72,7 +71,7 @@ import { Router } from '@angular/router';
 import { EntityAction } from '@home/models/entity/entity-component.models';
 import { AlarmRulesComponent } from '@home/components/alarm-rules/alarm-rules.component';
 
-type AlarmRuleTableEntity = CalculatedField | CalculatedFieldInfo;
+export type AlarmRuleTableEntity = CalculatedFieldAlarmRule | CalculatedFieldAlarmRuleInfo;
 
 export class AlarmRulesTableConfig extends EntityTableConfig<AlarmRuleTableEntity> {
 
@@ -159,9 +158,9 @@ export class AlarmRulesTableConfig extends EntityTableConfig<AlarmRuleTableEntit
     this.columns.push(new EntityTableColumn<CalculatedFieldAlarmRule>('name', 'alarm-rule.alarm-type', '33%',
       entity => this.utilsService.customTranslation(entity.name, entity.name)));
     if (this.pageMode) {
-      this.columns.push(new EntityTableColumn<CalculatedFieldInfo>('entityType', 'entity.entity-type', '10%',
+      this.columns.push(new EntityTableColumn<CalculatedFieldAlarmRuleInfo>('entityType', 'entity.entity-type', '10%',
         entity => this.translate.instant(entityTypeTranslations.get(entity.entityId.entityType).type)));
-      this.columns.push(new EntityLinkTableColumn<CalculatedFieldInfo>('entityName', 'entity.entity', '33%',
+      this.columns.push(new EntityLinkTableColumn<CalculatedFieldAlarmRuleInfo>('entityName', 'entity.entity', '33%',
         entity => this.utilsService.customTranslation(entity.entityName, entity.entityName),
         entity => getEntityDetailsPageURL(entity.entityId?.id, entity.entityId?.entityType as EntityType), false));
     }
@@ -260,7 +259,7 @@ export class AlarmRulesTableConfig extends EntityTableConfig<AlarmRuleTableEntit
     const copyCalculatedAlarmRule = deepClone(calculatedField);
     if (this.pageMode) {
       copyCalculatedAlarmRule.entityId = null;
-      delete (copyCalculatedAlarmRule as CalculatedFieldInfo).entityName;
+      delete (copyCalculatedAlarmRule as CalculatedFieldAlarmRuleInfo).entityName;
     }
     delete copyCalculatedAlarmRule.id;
     this.getCalculatedAlarmDialog(copyCalculatedAlarmRule, 'action.apply', isDirty)
@@ -271,10 +270,10 @@ export class AlarmRulesTableConfig extends EntityTableConfig<AlarmRuleTableEntit
       });
   }
 
-  private getCalculatedAlarmDialog(value?: AlarmRuleTableEntity, buttonTitle = 'action.add', isDirty = false): Observable<CalculatedField> {
+  private getCalculatedAlarmDialog(value?: AlarmRuleTableEntity, buttonTitle = 'action.add', isDirty = false): Observable<CalculatedFieldAlarmRule> {
     const entityId = this.entityId || value?.entityId;
-    const entityName = this.entityName || (value as CalculatedFieldInfo)?.entityName;
-    return this.dialog.open<AlarmRuleDialogComponent, AlarmRuleDialogData, CalculatedField>(AlarmRuleDialogComponent, {
+    const entityName = this.entityName || (value as CalculatedFieldAlarmRuleInfo)?.entityName;
+    return this.dialog.open<AlarmRuleDialogComponent, AlarmRuleDialogData, CalculatedFieldAlarmRule>(AlarmRuleDialogComponent, {
       disableClose: true,
       panelClass: ['tb-dialog', 'tb-fullscreen-dialog'],
       data: {
@@ -360,7 +359,7 @@ export class AlarmRulesTableConfig extends EntityTableConfig<AlarmRuleTableEntit
       .subscribe(() => this.updateData());
   }
 
-  private updateImportedCalculatedField(calculatedField: CalculatedField): CalculatedField {
+  private updateImportedCalculatedField(calculatedField: CalculatedFieldAlarmRule): CalculatedFieldAlarmRule {
     if (calculatedField.type === CalculatedFieldType.ALARM) {
       calculatedField.configuration.arguments = Object.keys(calculatedField.configuration.arguments).reduce((acc, key) => {
         const arg = calculatedField.configuration.arguments[key];
@@ -382,7 +381,7 @@ export class AlarmRulesTableConfig extends EntityTableConfig<AlarmRuleTableEntit
     ).subscribe(() => this.updateData());
   }
 
-  private getTestScriptDialog(calculatedField: AlarmRuleTableEntity, argumentsObj?: CalculatedFieldEventArguments, openCalculatedFieldEdit = true, expression?: string): Observable<string> {
+  getTestScriptDialog(calculatedField: AlarmRuleTableEntity, argumentsObj?: CalculatedFieldEventArguments, openCalculatedFieldEdit = true, expression?: string): Observable<string> {
     if (calculatedField.type === CalculatedFieldType.ALARM) {
       const resultArguments = Object.keys(calculatedField.configuration.arguments).reduce((acc, key) => {
         const type = calculatedField.configuration.arguments[key].refEntityKey.type;

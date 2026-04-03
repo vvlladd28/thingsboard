@@ -20,8 +20,8 @@ import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { PageData } from '@shared/models/page/page-data';
 import {
-  CalculatedField,
-  CalculatedFieldInfo,
+  CalculatedFieldAlarmRule,
+  CalculatedFieldAlarmRuleInfo,
   CalculatedFieldsQuery,
   CalculatedFieldTestScriptInputParams
 } from '@shared/models/calculated-field.models';
@@ -39,24 +39,24 @@ export class AlarmRulesService {
     private http: HttpClient
   ) { }
 
-  public getAlarmRuleById(alarmRuleId: string, config?: RequestConfig): Observable<CalculatedField> {
-    return this.http.get<CalculatedField>(`/api/alarm/rule/${alarmRuleId}`, defaultHttpOptionsFromConfig(config));
+  public getAlarmRuleById(alarmRuleId: string, config?: RequestConfig): Observable<CalculatedFieldAlarmRule> {
+    return this.http.get<CalculatedFieldAlarmRule>(`/api/alarm/rule/${alarmRuleId}`, defaultHttpOptionsFromConfig(config));
   }
 
-  public saveAlarmRule(alarmRule: CalculatedField, config?: RequestConfig): Observable<CalculatedField> {
-    return this.http.post<CalculatedField>('/api/alarm/rule', alarmRule, defaultHttpOptionsFromConfig(config));
+  public saveAlarmRule(alarmRule: CalculatedFieldAlarmRule, config?: RequestConfig): Observable<CalculatedFieldAlarmRule> {
+    return this.http.post<CalculatedFieldAlarmRule>('/api/alarm/rule', alarmRule, defaultHttpOptionsFromConfig(config));
   }
 
   public deleteAlarmRule(alarmRuleId: string, config?: RequestConfig): Observable<boolean> {
     return this.http.delete<boolean>(`/api/alarm/rule/${alarmRuleId}`, defaultHttpOptionsFromConfig(config));
   }
 
-  public getAlarmRules(pageLink: PageLink, query: CalculatedFieldsQuery, config?: RequestConfig): Observable<PageData<CalculatedFieldInfo>> {
-    return this.http.get<PageData<CalculatedFieldInfo>>(`/api/alarm/rules${pageLink.toQuery()}`, defaultHttpOptionsFromParams(query, config));
+  public getAlarmRules(pageLink: PageLink, query: CalculatedFieldsQuery, config?: RequestConfig): Observable<PageData<CalculatedFieldAlarmRuleInfo>> {
+    return this.http.get<PageData<CalculatedFieldAlarmRuleInfo>>(`/api/alarm/rules${pageLink.toQuery()}`, defaultHttpOptionsFromParams(query, config));
   }
 
-  public getAlarmRulesByEntityId({ entityType, id }: EntityId, pageLink: PageLink, config?: RequestConfig): Observable<PageData<CalculatedField>> {
-    return this.http.get<PageData<CalculatedField>>(`/api/alarm/rules/${entityType}/${id}${pageLink.toQuery()}`, defaultHttpOptionsFromConfig(config));
+  public getAlarmRulesByEntityId({ entityType, id }: EntityId, pageLink: PageLink, config?: RequestConfig): Observable<PageData<CalculatedFieldAlarmRule>> {
+    return this.http.get<PageData<CalculatedFieldAlarmRule>>(`/api/alarm/rules/${entityType}/${id}${pageLink.toQuery()}`, defaultHttpOptionsFromConfig(config));
   }
 
   public testScript(inputParams: CalculatedFieldTestScriptInputParams, config?: RequestConfig): Observable<EntityTestScriptResult> {
