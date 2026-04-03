@@ -24,12 +24,11 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.thingsboard.server.common.data.BaseData;
-import org.thingsboard.server.common.data.EntityType;
 import org.thingsboard.server.common.data.HasAdditionalInfo;
 import org.thingsboard.server.common.data.HasDebugSettings;
 import org.thingsboard.server.common.data.HasName;
-import org.thingsboard.server.common.data.HasVersion;
 import org.thingsboard.server.common.data.HasTenantId;
+import org.thingsboard.server.common.data.HasVersion;
 import org.thingsboard.server.common.data.cf.configuration.AlarmCalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.debug.DebugSettings;
 import org.thingsboard.server.common.data.id.CalculatedFieldId;
@@ -64,7 +63,7 @@ public class AlarmRuleDefinition extends BaseData<CalculatedFieldId> implements 
     private Long version;
     @NoXss
     @Schema(description = "Additional parameters of the alarm rule. " +
-            "May include: 'description' (string).",
+                          "May include: 'description' (string).",
             implementation = com.fasterxml.jackson.databind.JsonNode.class,
             example = "{\"description\":\"High temperature alarm rule\"}")
     private JsonNode additionalInfo;
@@ -110,10 +109,6 @@ public class AlarmRuleDefinition extends BaseData<CalculatedFieldId> implements 
     @JsonSetter
     public void setDebugMode(boolean debugMode) {
         this.debugMode = debugMode;
-    }
-
-    public EntityType getEntityType() {
-        return EntityType.CALCULATED_FIELD;
     }
 
     public CalculatedField toCalculatedField() {

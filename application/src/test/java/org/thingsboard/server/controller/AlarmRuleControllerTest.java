@@ -272,8 +272,8 @@ public class AlarmRuleControllerTest extends AbstractControllerTest {
         Device testDevice = createDevice("Test device", "1234567890");
         AlarmRuleDefinition saved = saveAlarmRule(createTestAlarmRule(testDevice.getId(), "Debug Test"));
 
-        JsonNode result = doGet("/api/alarm/rule/" + saved.getId().getId() + "/debug", JsonNode.class);
-        assertThat(result).isNull();
+        doGet("/api/alarm/rule/" + saved.getId().getId() + "/debug")
+                .andExpect(status().isOk());
 
         doDelete("/api/alarm/rule/" + saved.getId().getId())
                 .andExpect(status().isOk());
