@@ -110,6 +110,9 @@ public class AlarmRuleController extends BaseController {
                                              @RequestBody AlarmRuleDefinition alarmRuleDefinition) throws Exception {
         alarmRuleDefinition.setTenantId(getTenantId());
         checkEntityId(alarmRuleDefinition.getEntityId(), Operation.WRITE_CALCULATED_FIELD);
+        if (alarmRuleDefinition.getId() != null) {
+            checkAlarmRule(alarmRuleDefinition.getId());
+        }
         CalculatedField calculatedField = alarmRuleDefinition.toCalculatedField();
         checkReferencedEntities(calculatedField.getConfiguration());
         CalculatedField saved = tbCalculatedFieldService.save(calculatedField, getCurrentUser());

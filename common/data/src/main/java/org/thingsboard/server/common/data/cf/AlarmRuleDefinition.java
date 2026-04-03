@@ -138,7 +138,10 @@ public class AlarmRuleDefinition extends BaseData<CalculatedFieldId> implements 
         def.setDebugMode(cf.isDebugMode());
         def.setDebugSettings(cf.getDebugSettings());
         def.setConfigurationVersion(cf.getConfigurationVersion());
-        def.setConfiguration((AlarmCalculatedFieldConfiguration) cf.getConfiguration());
+        if (!(cf.getConfiguration() instanceof AlarmCalculatedFieldConfiguration config)) {
+            throw new IllegalArgumentException("Expected ALARM calculated field, got " + cf.getType());
+        }
+        def.setConfiguration(config);
         def.setVersion(cf.getVersion());
         def.setAdditionalInfo(cf.getAdditionalInfo());
         return def;
