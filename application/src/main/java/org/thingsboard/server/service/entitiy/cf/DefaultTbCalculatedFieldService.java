@@ -155,8 +155,8 @@ public class DefaultTbCalculatedFieldService extends AbstractTbEntityService imp
             output = JacksonUtil.toString(json);
         } catch (Exception e) {
             log.error("Error evaluating expression", e);
-            Throwable rootCause = ExceptionUtils.getRootCause(e);
-            errorText = ObjectUtils.firstNonNull(rootCause.getMessage(), e.getMessage(), e.getClass().getSimpleName());
+            Throwable rootCause = ObjectUtils.firstNonNull(ExceptionUtils.getRootCause(e), e);
+            errorText = ObjectUtils.firstNonNull(rootCause.getMessage(), e.getClass().getSimpleName());
         } finally {
             if (engine != null) {
                 engine.destroy();

@@ -285,21 +285,8 @@ public class CalculatedFieldController extends BaseController {
     public JsonNode testCalculatedFieldScript(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(description = "Test calculated field TBEL expression.")
             @RequestBody JsonNode inputParams) throws ThingsboardException {
+        checkParameter("expression", inputParams.has("expression") ? inputParams.get("expression").asText() : null);
         return tbCalculatedFieldService.executeTestScript(getTenantId(), inputParams);
-    }
-
-    private void checkReferencedEntities(CalculatedFieldConfiguration calculatedFieldConfig) throws ThingsboardException {
-        Set<EntityId> referencedEntityIds = calculatedFieldConfig.getReferencedEntities();
-        for (EntityId referencedEntityId : referencedEntityIds) {
-            EntityType refEntityType = referencedEntityId.getEntityType();
-            switch (refEntityType) {
-                case TENANT -> {
-                    return;
-                }
-                case CUSTOMER, ASSET, DEVICE -> checkEntityId(referencedEntityId, Operation.READ);
-                default -> throw new IllegalArgumentException("Unsupported referenced entity type: '" + refEntityType + "'.");
-            }
-        }
     }
 
 }

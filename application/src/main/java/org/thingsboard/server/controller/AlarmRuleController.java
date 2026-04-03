@@ -39,7 +39,6 @@ import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.cf.CalculatedFieldFilter;
 import org.thingsboard.server.common.data.cf.CalculatedFieldInfo;
 import org.thingsboard.server.common.data.cf.CalculatedFieldType;
-import org.thingsboard.server.common.data.cf.configuration.CalculatedFieldConfiguration;
 import org.thingsboard.server.common.data.event.EventType;
 import org.thingsboard.server.common.data.exception.ThingsboardException;
 import org.thingsboard.server.common.data.id.CalculatedFieldId;
@@ -243,20 +242,6 @@ public class AlarmRuleController extends BaseController {
             @RequestBody JsonNode inputParams) throws ThingsboardException {
         checkParameter("expression", inputParams.has("expression") ? inputParams.get("expression").asText() : null);
         return tbCalculatedFieldService.executeTestScript(getTenantId(), inputParams);
-    }
-
-    private void checkReferencedEntities(CalculatedFieldConfiguration calculatedFieldConfig) throws ThingsboardException {
-        Set<EntityId> referencedEntityIds = calculatedFieldConfig.getReferencedEntities();
-        for (EntityId referencedEntityId : referencedEntityIds) {
-            EntityType refEntityType = referencedEntityId.getEntityType();
-            switch (refEntityType) {
-                case TENANT -> {
-                    return;
-                }
-                case CUSTOMER, ASSET, DEVICE -> checkEntityId(referencedEntityId, Operation.READ);
-                default -> throw new IllegalArgumentException("Unsupported referenced entity type: '" + refEntityType + "'.");
-            }
-        }
     }
 
     private CalculatedField checkAlarmRule(CalculatedFieldId calculatedFieldId) throws ThingsboardException {
