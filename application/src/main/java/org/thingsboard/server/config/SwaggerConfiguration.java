@@ -62,10 +62,8 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.StringUtils;
-import org.thingsboard.server.common.data.ContactBased;
 import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
-import org.thingsboard.server.common.data.id.HasId;
 import org.thingsboard.server.exception.ThingsboardCredentialsExpiredResponse;
 import org.thingsboard.server.exception.ThingsboardErrorResponse;
 import org.thingsboard.server.service.security.auth.rest.LoginRequest;
@@ -359,16 +357,11 @@ public class SwaggerConfiguration {
                 .addSchemas("ThingsboardErrorResponse", ModelConverters.getInstance().readAllAsResolvedSchema(new AnnotatedType().type(ThingsboardErrorResponse.class)).schema)
                 .addSchemas("ThingsboardCredentialsExpiredResponse", ModelConverters.getInstance().readAllAsResolvedSchema(new AnnotatedType().type(ThingsboardCredentialsExpiredResponse.class)).schema)
                 .addSchemas("ThingsboardErrorCode", errorCodeSchema)
-                // Pre-register types to prevent springdoc resolution-order issues:
-                // - Types referenced with @JsonIgnoreProperties on fields (e.g. CalculatedField
-                //   via EntityExportData.calculatedFields) to prevent field-level ignore lists
-                //   from polluting the global schema.
-                // - Intermediate interfaces/classes (e.g. ContactBased, HasId) that springdoc
-                //   only creates as "*Object" byproducts; pre-registering the base name lets
-                //   the duplicate removal pass clean them up.
-                .addSchemas("CalculatedField", ModelConverters.getInstance().readAllAsResolvedSchema(new AnnotatedType().type(CalculatedField.class)).schema)
-                .addSchemas("ContactBased", ModelConverters.getInstance().readAllAsResolvedSchema(new AnnotatedType().type(ContactBased.class)).schema)
-                .addSchemas("HasId", ModelConverters.getInstance().readAllAsResolvedSchema(new AnnotatedType().type(HasId.class)).schema);
+                // Pre-register types referenced with @JsonIgnoreProperties on fields
+                // (e.g. CalculatedField via EntityExportData.calculatedFields) to prevent
+                // field-level ignore lists from polluting the global schema when resolution
+                // order varies.
+                .addSchemas("CalculatedField", ModelConverters.getInstance().readAllAsResolvedSchema(new AnnotatedType().type(CalculatedField.class)).schema);
     }
 
     private OperationCustomizer operationCustomizer() {
