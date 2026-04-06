@@ -407,6 +407,29 @@ public class SwaggerConfiguration {
                     }
                 });
 
+                // Springdoc creates duplicate schemas with an "Object" suffix when a discriminated
+                // type (e.g. EntityExportData) is resolved through multiple paths: once via
+                // @Schema(implementation=...) and once via generic type resolution (e.g. from
+                // Map<..., List<EntityExportData<?>>>). The duplicate breaks allOf inheritance
+                // in generated clients. Remove it only when both schemas are structurally equal.
+                for (String name : new ArrayList<>(schemas.keySet())) {
+                    if (!name.endsWith("Object")) continue;
+                    String baseName = name.substring(0, name.length() - "Object".length());
+                    Schema<?> baseSchema = schemas.get(baseName);
+                    if (baseSchema == null) continue;
+                    Schema<?> objectSchema = schemas.get(name);
+                    if (!baseSchema.equals(objectSchema)) continue;
+
+                    schemas.remove(name);
+                    String refToRemove = "#/components/schemas/" + name;
+                    schemas.values().forEach(s -> {
+                        if (s.getAllOf() != null) {
+                            s.getAllOf().removeIf(allOfEntry -> refToRemove.equals(((Schema<?>) allOfEntry).get$ref()));
+                        }
+                    });
+                    log.debug("Removed duplicate schema '{}' (identical to '{}')", name, baseName);
+                }
+
                 // Fix polymorphic properties: replace inline oneOf with base type $ref
                 schemas.values().forEach(schema -> {
                     replaceInlineOneOfProperties(schema, schemas);
@@ -544,6 +567,16 @@ public class SwaggerConfiguration {
                             refSchema.set$ref("#/components/schemas/" + baseType);
                             prop.setAdditionalProperties(refSchema);
                             log.debug("Replaced oneOf in additionalProperties with $ref to {} in property {}", baseType, propName);
+                        }
+                    }
+                    // Check if additionalProperties is an array whose items has oneOf (e.g. Map<K, List<PolymorphicType>>)
+                    if (additionalProps.getItems() != null && additionalProps.getItems().getOneOf() != null && !additionalProps.getItems().getOneOf().isEmpty()) {
+                        String baseType = findBaseTypeForOneOf(allSchemas, additionalProps.getItems().getOneOf());
+                        if (baseType != null) {
+                            Schema<?> refSchema = new Schema<>();
+                            refSchema.set$ref("#/components/schemas/" + baseType);
+                            additionalProps.setItems(refSchema);
+                            log.debug("Replaced oneOf in additionalProperties.items with $ref to {} in property {}", baseType, propName);
                         }
                     }
                 }
