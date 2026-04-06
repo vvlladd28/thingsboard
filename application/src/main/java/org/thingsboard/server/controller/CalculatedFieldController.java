@@ -88,7 +88,7 @@ public class CalculatedFieldController extends BaseController {
 
     public static final String CALCULATED_FIELD_ID = "calculatedFieldId";
 
-    static final String TEST_SCRIPT_EXPRESSION =
+    private static final String TEST_SCRIPT_EXPRESSION =
             "Execute the Script expression and return the result. The format of request: \n\n"
             + MARKDOWN_CODE_BLOCK_START
             + "{\n" +
@@ -150,13 +150,13 @@ public class CalculatedFieldController extends BaseController {
     @PreAuthorize("hasAnyAuthority('TENANT_ADMIN')")
     @GetMapping(value = "/{entityType}/{entityId}/calculatedFields", params = {"pageSize", "page"})
     public PageData<CalculatedField> getCalculatedFieldsByEntityIdV1(@PathVariable("entityType") String entityType,
-                                                                   @PathVariable("entityId") String entityIdStr,
-                                                                   @RequestParam int pageSize,
-                                                                   @RequestParam int page,
-                                                                   @RequestParam(required = false) CalculatedFieldType type,
-                                                                   @RequestParam(required = false) String textSearch,
-                                                                   @RequestParam(required = false) String sortProperty,
-                                                                   @RequestParam(required = false) String sortOrder) throws ThingsboardException {
+                                                                     @PathVariable("entityId") String entityIdStr,
+                                                                     @RequestParam int pageSize,
+                                                                     @RequestParam int page,
+                                                                     @RequestParam(required = false) CalculatedFieldType type,
+                                                                     @RequestParam(required = false) String textSearch,
+                                                                     @RequestParam(required = false) String sortProperty,
+                                                                     @RequestParam(required = false) String sortOrder) throws ThingsboardException {
         PageLink pageLink = createPageLink(pageSize, page, textSearch, sortProperty, sortOrder);
         checkParameter("entityId", entityIdStr);
         EntityId entityId = EntityIdFactory.getByTypeAndUuid(entityType, entityIdStr);

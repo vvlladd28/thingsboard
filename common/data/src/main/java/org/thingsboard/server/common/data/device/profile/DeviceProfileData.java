@@ -35,6 +35,7 @@ public class DeviceProfileData implements Serializable {
     private DeviceProfileTransportConfiguration transportConfiguration;
     @Schema(description = "JSON object of provisioning strategy type per device profile")
     private DeviceProfileProvisionConfiguration provisionConfiguration;
+    @Valid
     @Schema(hidden = true)
     private List<DeviceProfileAlarm> alarms;
 

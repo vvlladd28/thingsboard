@@ -382,40 +382,36 @@ export class AlarmRulesTableConfig extends EntityTableConfig<AlarmRuleTableEntit
   }
 
   getTestScriptDialog(calculatedField: AlarmRuleTableEntity, argumentsObj?: CalculatedFieldEventArguments, openCalculatedFieldEdit = true, expression?: string): Observable<string> {
-    if (calculatedField.type === CalculatedFieldType.ALARM) {
-      const resultArguments = Object.keys(calculatedField.configuration.arguments).reduce((acc, key) => {
-        const type = calculatedField.configuration.arguments[key].refEntityKey.type;
-        acc[key] = isObject(argumentsObj) && argumentsObj.hasOwnProperty(key)
-          ? {...argumentsObj[key], type}
-          : type === ArgumentType.Rolling ? {values: [], type} : {value: '', type, ts: new Date().getTime()};
-        return acc;
-      }, {});
-      return this.dialog.open<CalculatedFieldScriptTestDialogComponent, CalculatedFieldTestScriptDialogData, string>(CalculatedFieldScriptTestDialogComponent,
-        {
-          disableClose: true,
-          panelClass: ['tb-dialog', 'tb-fullscreen-dialog', 'tb-fullscreen-dialog-gt-xs'],
-          data: {
-            arguments: resultArguments,
-            expression,
-            argumentsEditorCompleter: getCalculatedFieldArgumentsEditorCompleter(calculatedField.configuration.arguments),
-            argumentsHighlightRules: getCalculatedFieldArgumentsHighlights(calculatedField.configuration.arguments),
-            openCalculatedFieldEdit
+    const resultArguments = Object.keys(calculatedField.configuration.arguments).reduce((acc, key) => {
+      const type = calculatedField.configuration.arguments[key].refEntityKey.type;
+      acc[key] = isObject(argumentsObj) && argumentsObj.hasOwnProperty(key)
+        ? {...argumentsObj[key], type}
+        : type === ArgumentType.Rolling ? {values: [], type} : {value: '', type, ts: new Date().getTime()};
+      return acc;
+    }, {});
+    return this.dialog.open<CalculatedFieldScriptTestDialogComponent, CalculatedFieldTestScriptDialogData, string>(CalculatedFieldScriptTestDialogComponent,
+      {
+        disableClose: true,
+        panelClass: ['tb-dialog', 'tb-fullscreen-dialog', 'tb-fullscreen-dialog-gt-xs'],
+        data: {
+          arguments: resultArguments,
+          expression,
+          argumentsEditorCompleter: getCalculatedFieldArgumentsEditorCompleter(calculatedField.configuration.arguments),
+          argumentsHighlightRules: getCalculatedFieldArgumentsHighlights(calculatedField.configuration.arguments),
+          openCalculatedFieldEdit
+        }
+      }).afterClosed()
+      .pipe(
+        filter(Boolean),
+        tap(expression => {
+          if (openCalculatedFieldEdit) {
+            this.editCalculatedField(null, {
+              entityId: this.entityId, ...calculatedField,
+              configuration: {...calculatedField.configuration, expression} as any
+            }, true)
           }
-        }).afterClosed()
-        .pipe(
-          filter(Boolean),
-          tap(expression => {
-            if (openCalculatedFieldEdit) {
-              this.editCalculatedField(null, {
-                entityId: this.entityId, ...calculatedField,
-                configuration: {...calculatedField.configuration, expression} as any
-              }, true)
-            }
-          }),
-        );
-    } else {
-      return of(null);
-    }
+        }),
+      );
   }
 
   private openCalculatedField($event: Event, entity: AlarmRuleTableEntity) {
