@@ -62,6 +62,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.StringUtils;
+import org.thingsboard.server.common.data.ai.model.chat.AiChatModelConfig;
 import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.exception.ThingsboardCredentialsExpiredResponse;
@@ -77,6 +78,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Deque;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -361,7 +363,8 @@ public class SwaggerConfiguration {
                 // (e.g. CalculatedField via EntityExportData.calculatedFields) to prevent
                 // field-level ignore lists from polluting the global schema when resolution
                 // order varies.
-                .addSchemas("CalculatedField", ModelConverters.getInstance().readAllAsResolvedSchema(new AnnotatedType().type(CalculatedField.class)).schema);
+                .addSchemas("CalculatedField", ModelConverters.getInstance().readAllAsResolvedSchema(new AnnotatedType().type(CalculatedField.class)).schema)
+                .addSchemas("AiChatModelConfig", ModelConverters.getInstance().readAllAsResolvedSchema(new AnnotatedType().type(AiChatModelConfig.class)).schema);
     }
 
     private OperationCustomizer operationCustomizer() {
@@ -432,20 +435,40 @@ public class SwaggerConfiguration {
                     log.debug("Removed duplicate schema '{}' (base '{}' exists)", name, baseName);
                 }
 
-                // Remove duplicate inline entries in allOf (springdoc can generate identical
-                // property blocks when resolving a type through multiple parent paths).
+                // Remove duplicate or redundant inline entries in allOf. Springdoc can
+                // generate multiple inline property blocks when resolving a type through
+                // multiple parent paths (e.g. record + sealed interface). One block may be
+                // a strict subset of another (same properties, but the superset has extras
+                // like "modelType"). Keep only the superset in that case.
                 schemas.values().forEach(schema -> {
                     if (schema.getAllOf() != null && schema.getAllOf().size() > 1) {
                         List<Schema> allOf = schema.getAllOf();
-                        List<Schema> deduplicated = new ArrayList<>();
-                        for (Schema entry : allOf) {
-                            if (deduplicated.stream().noneMatch(entry::equals)) {
-                                deduplicated.add(entry);
+                        Set<Integer> redundant = new HashSet<>();
+                        for (int i = 0; i < allOf.size(); i++) {
+                            if (redundant.contains(i)) continue;
+                            Schema a = allOf.get(i);
+                            if (a.get$ref() != null || a.getProperties() == null) continue;
+                            for (int j = i + 1; j < allOf.size(); j++) {
+                                if (redundant.contains(j)) continue;
+                                Schema b = allOf.get(j);
+                                if (b.get$ref() != null || b.getProperties() == null) continue;
+                                if (a.getProperties().entrySet().containsAll(b.getProperties().entrySet())) {
+                                    redundant.add(j); // b is a subset of a
+                                } else if (b.getProperties().entrySet().containsAll(a.getProperties().entrySet())) {
+                                    redundant.add(i); // a is a subset of b
+                                    break;
+                                }
                             }
                         }
-                        if (deduplicated.size() < allOf.size()) {
+                        if (!redundant.isEmpty()) {
+                            List<Schema> filtered = new ArrayList<>();
+                            for (int i = 0; i < allOf.size(); i++) {
+                                if (!redundant.contains(i)) {
+                                    filtered.add(allOf.get(i));
+                                }
+                            }
                             allOf.clear();
-                            allOf.addAll(deduplicated);
+                            allOf.addAll(filtered);
                         }
                     }
                 });
