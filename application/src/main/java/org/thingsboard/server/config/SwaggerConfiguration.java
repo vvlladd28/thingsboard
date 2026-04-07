@@ -15,6 +15,7 @@
  */
 package org.thingsboard.server.config;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -63,13 +64,13 @@ import org.springframework.http.HttpStatus;
 import org.thingsboard.common.util.JacksonUtil;
 import org.thingsboard.server.common.data.StringUtils;
 import org.thingsboard.server.common.data.ai.model.chat.AiChatModelConfig;
-import org.thingsboard.server.common.data.cf.CalculatedField;
 import org.thingsboard.server.common.data.exception.ThingsboardErrorCode;
 import org.thingsboard.server.exception.ThingsboardCredentialsExpiredResponse;
 import org.thingsboard.server.exception.ThingsboardErrorResponse;
 import org.thingsboard.server.service.security.auth.rest.LoginRequest;
 import org.thingsboard.server.service.security.auth.rest.LoginResponse;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.ByteBuffer;
@@ -297,6 +298,19 @@ public class SwaggerConfiguration {
     @Lazy(false)
     ModelConverter mapAwareConverter() {
         return (type, context, chain) -> {
+            // Strip field-level @JsonIgnoreProperties from context annotations so it
+            // doesn't pollute the global schema. The OpenAPI schema should show all
+            // properties; field-level ignore is a serialization concern only.
+            Annotation[] ctxAnnotations = type.getCtxAnnotations();
+            if (ctxAnnotations != null) {
+                Annotation[] filtered = Arrays.stream(ctxAnnotations)
+                        .filter(a -> !(a instanceof JsonIgnoreProperties))
+                        .toArray(Annotation[]::new);
+                if (filtered.length != ctxAnnotations.length) {
+                    type.ctxAnnotations(filtered);
+                }
+            }
+
             JavaType javaType = Json.mapper().constructType(type.getType());
             if (javaType != null) {
                 Class<?> cls = javaType.getRawClass();
@@ -359,11 +373,6 @@ public class SwaggerConfiguration {
                 .addSchemas("ThingsboardErrorResponse", ModelConverters.getInstance().readAllAsResolvedSchema(new AnnotatedType().type(ThingsboardErrorResponse.class)).schema)
                 .addSchemas("ThingsboardCredentialsExpiredResponse", ModelConverters.getInstance().readAllAsResolvedSchema(new AnnotatedType().type(ThingsboardCredentialsExpiredResponse.class)).schema)
                 .addSchemas("ThingsboardErrorCode", errorCodeSchema)
-                // Pre-register types referenced with @JsonIgnoreProperties on fields
-                // (e.g. CalculatedField via EntityExportData.calculatedFields) to prevent
-                // field-level ignore lists from polluting the global schema when resolution
-                // order varies.
-                .addSchemas("CalculatedField", ModelConverters.getInstance().readAllAsResolvedSchema(new AnnotatedType().type(CalculatedField.class)).schema)
                 .addSchemas("AiChatModelConfig", ModelConverters.getInstance().readAllAsResolvedSchema(new AnnotatedType().type(AiChatModelConfig.class)).schema);
     }
 
