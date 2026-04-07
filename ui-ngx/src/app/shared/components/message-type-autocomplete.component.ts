@@ -53,7 +53,7 @@ export class MessageTypeAutocompleteComponent implements ControlValueAccessor, O
   }
 
   @Input()
-  appearance: MatFormFieldAppearance = 'fill'
+  appearance: MatFormFieldAppearance = 'fill';
 
   @Input()
   disabled: boolean;

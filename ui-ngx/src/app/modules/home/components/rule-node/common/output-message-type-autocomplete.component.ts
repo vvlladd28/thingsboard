@@ -62,7 +62,7 @@ export class OutputMessageTypeAutocompleteComponent implements ControlValueAcces
   disabled: boolean;
 
   @Input()
-  appearance: MatFormFieldAppearance = 'fill'
+  appearance: MatFormFieldAppearance = 'fill';
 
   @Input()
   @coerceBoolean()

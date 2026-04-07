@@ -87,7 +87,7 @@
         }
         <mat-hint translate>rule-node-config.general-pattern-hint</mat-hint>
       </mat-form-field>
-      <mat-checkbox formControlName="dynamicSeverity" appearance="outline">
+      <mat-checkbox formControlName="dynamicSeverity">
         {{ 'rule-node-config.use-alarm-severity-pattern' | translate }}
       </mat-checkbox>
       @if (!createAlarmConfigForm.get('dynamicSeverity').value) {
